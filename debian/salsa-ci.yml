@@ -1,0 +1,39 @@
+include:
+  - https://salsa.debian.org/salsa-ci-team/pipeline/raw/master/salsa-ci.yml
+  - https://salsa.debian.org/salsa-ci-team/pipeline/raw/master/pipeline-jobs.yml
+
+variables:
+  RELEASE: 'bullseye'
+  DEBIAN_FRONTEND: noninteractive
+  # Common dependencies on all jobs
+  DEPS_DEV: ""
+  # Build dependencies for the .deb
+  DEPS_DEB: "build-essential debhelper devscripts"
+
+.before_script_template: &basic-deps
+    before_script:
+        - rm -f /etc/apt/apt.conf.d/docker-clean
+        # Don't build manual database on installation
+        - |
+          debconf-set-selections << EOF
+          man-db man-db/auto-update boolean false
+          EOF
+        - apt-get -qq update
+        #- apt-get -qq install -y --no-install-recommends ${DEPS_DEV} -o=Dpkg::Use-Pty=0 > /dev/null
+
+
+mobian:
+    stage: build
+    tags:
+    - mobian
+    - arm64
+    <<: *basic-deps
+
+    script:
+        - apt-get -qq install -y --no-install-recommends -o=Dpkg::Use-Pty=0 ${DEPS_DEB} > /dev/null
+        - dpkg-buildpackage -us -uc -b
+        - mv ../*.deb .
+
+    artifacts:
+        name: 'DEB packages'
+        paths: ['*.deb']
