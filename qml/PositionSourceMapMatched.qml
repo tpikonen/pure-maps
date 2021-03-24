@@ -40,7 +40,7 @@ Item {
     property alias mapMatchingAvailable: scoutbus.available
     property alias mapMatchingMode: scoutbus.mode
     property alias name: gps.name
-    property var   position: gps.position
+    property var   position
     property alias preferredPositioningMethods: gps.preferredPositioningMethods
     property alias sourceError: gps.sourceError
     property string streetName: ""
@@ -91,23 +91,39 @@ Item {
     PositionSource {
         id: gps
 
-        function positionUpdate(position) {
+        function positionUpdate(positionRaw) {
+            // Filter coordinates first to ensure that they
+            // are numeric values
+            var pos = {}
+            for (var i in positionRaw) {
+                if (!(positionRaw[i] instanceof Function))
+                    pos[i] = positionRaw[i]
+            }
+
+            if (pos.coordinate.latitude == null ||
+                    isNaN(pos.coordinate.latitude) ||
+                    pos.coordinate.longitude == null ||
+                    isNaN(pos.coordinate.longitude))
+                pos.coordinate = QtPositioning.coordinate(0, 0);
+
             if (scoutbus.available &&
                     scoutbus.mode &&
-                    position.latitudeValid && position.longitudeValid &&
-                    position.horizontalAccuracyValid) {
+                    pos.latitudeValid && pos.longitudeValid &&
+                    pos.horizontalAccuracyValid) {
                 if (master.timingStatsEnable && !master._timingShot) {
                     master._timingOverallCounter += 1;
                     master._timingShot = true;
                     master._timingLastCallStart = Date.now();
                 }
-                scoutbus.mapMatch(position);
+                scoutbus.mapMatch(pos);
             } else {
-                master.position = position;
+                master.position = pos;
                 if (scoutbus.mode && scoutbus.running)
                     scoutbus.stop();
             }
         }
+
+        Component.onCompleted: positionUpdate(position)
 
         onPositionChanged: if (testingCoordinate==null) positionUpdate(position)
 
@@ -121,9 +137,9 @@ Item {
     // interaction with OSM Scout Server via D-Bus
     DBusInterface {
         id: scoutbus
-        service: "org.osm.scout.server1"
-        path: "/org/osm/scout/server1/mapmatching1"
-        iface: "org.osm.scout.server1.mapmatching1"
+        service: "io.github.rinigus.OSMScoutServer"
+        path: "/io/github/rinigus/OSMScoutServer/mapmatching"
+        iface: "io.github.rinigus.OSMScoutServer.mapmatching"
 
         property bool available: false
         property int  mode: 0
