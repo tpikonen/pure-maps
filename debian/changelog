@@ -1,4 +1,10 @@
-pure-maps (2.6.0-1) UNRELEASED; urgency=medium
+pure-maps (2.6.0+bab4f3cc-1) UNRELEASED; urgency=medium
+
+  * update to current master to avoid crashes
+
+ -- Sebastian Spaeth <Sebastian@SSpaeth.de>  Tue, 23 Mar 2021 12:32:40 +0100
+
+pure-maps (2.6.0-1) experimental; urgency=medium
 
   * Initial release.
 
