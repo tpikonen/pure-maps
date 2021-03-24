@@ -7,6 +7,10 @@ Puremaps Debian packaging
 
   by doing `git submodule update --init`
 
+- Somehow Salsa's CI extract-source task does not include the submodules,
+  so they don't end up in the .orig tarball. Committing an .orig tarball
+  into the pristine-tar branch circumvents that as it uses that one.
+  
 - qttools5-dev-tools provides lconvert
 
 pyotherside requires:
