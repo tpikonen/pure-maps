@@ -9,31 +9,19 @@ variables:
   DEPS_DEV: ""
   # Build dependencies for the .deb
   DEPS_DEB: "build-essential debhelper devscripts"
+  # Those are set from the web UI: SALSA_CI_EXTRA_REPOSITORY SALSA_CI_EXTRA_REPOSITORY_KEY
+  # use http instsead of https
 
-.before_script_template: &basic-deps
-    before_script:
-        - rm -f /etc/apt/apt.conf.d/docker-clean
-        # Don't build manual database on installation
-        - |
-          debconf-set-selections << EOF
-          man-db man-db/auto-update boolean false
-          EOF
-        - apt-get -qq update
-        #- apt-get -qq install -y --no-install-recommends ${DEPS_DEV} -o=Dpkg::Use-Pty=0 > /dev/null
-
-
-mobian:
-    stage: build
-    tags:
-    - mobian
-    - arm64
-    <<: *basic-deps
-
-    script:
-        - apt-get -qq install -y --no-install-recommends -o=Dpkg::Use-Pty=0 ${DEPS_DEB} > /dev/null
-        - dpkg-buildpackage -us -uc -b
-        - mv ../*.deb .
-
-    artifacts:
-        name: 'DEB packages'
-        paths: ['*.deb']
+#mobian:
+#    stage: build
+#    tags:
+#    - mobian
+#
+#    script:
+#        - apt-get -qq install -y --no-install-recommends -o=Dpkg::Use-Pty=0 ${DEPS_DEB} > /dev/null
+#        - dpkg-buildpackage -us -uc -b
+#        - mv ../*.deb .
+#
+#    artifacts:
+#        name: 'DEB packages'
+#        paths: ['*.deb']

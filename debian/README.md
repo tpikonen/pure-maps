@@ -1,10 +1,6 @@
 Puremaps Debian packaging
 =========================
 
-A fresh attempt at packaging https://github.com/rinigus/pure-maps
-
-Notes:
-
 - Make sure to pull git submodules to get:
 	path = thirdparty/geomag
 	url = https://github.com/rinigus/geomag.git
