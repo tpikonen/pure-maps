@@ -10,18 +10,10 @@ variables:
   # Build dependencies for the .deb
   DEPS_DEB: "build-essential debhelper devscripts"
   # Those are set from the web UI: SALSA_CI_EXTRA_REPOSITORY SALSA_CI_EXTRA_REPOSITORY_KEY
-  # use http instsead of https
 
-#mobian:
-#    stage: build
-#    tags:
-#    - mobian
-#
-#    script:
-#        - apt-get -qq install -y --no-install-recommends -o=Dpkg::Use-Pty=0 ${DEPS_DEB} > /dev/null
-#        - dpkg-buildpackage -us -uc -b
-#        - mv ../*.deb .
-#
-#    artifacts:
-#        name: 'DEB packages'
-#        paths: ['*.deb']
+
+piuparts:
+  extends: .test-piuparts
+  before_script:
+    - echo "Install ca-certificates so we trust https://salsa"
+    - apt update && apt install -q -yy ca-certificates
