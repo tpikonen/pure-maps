@@ -1,4 +1,10 @@
-pure-maps (2.6.5-2) UNRELEASED; urgency=medium
+pure-maps (2.7.1-1) UNRELEASED; urgency=medium
+
+  * New upstream release
+
+ -- Sebastian Spaeth <Sebastian@SSpaeth.de>  Tue, 23 Apr 2021 12:32:40 +0100
+
+pure-maps (2.6.5-2) experimental; urgency=medium
 
   * Added missing runtime dependency
   * New upstream release
