@@ -17,7 +17,7 @@ Depends: ${shlibs:Depends}, ${misc:Depends}, qml-module-org-kde-kirigami2,
          libqt5multimedia5-plugins
 	 qml-module-qtpositioning, qml-module-qtsensors,
 	 qml-module-qt-labs-settings, libnemodbus1, python3-gpxpy
-Recommends: espeak-ng-espeak | espeak
+Recommends: espeak-ng-espeak | espeak | flite
 Description: Display maps, places, routes, and provide navigation instructions
  Pure Maps is an application for Sailfish OS and Linux to display vector and
  raster maps, places, routes, and provide navigation instructions with a
