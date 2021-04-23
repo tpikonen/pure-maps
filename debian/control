@@ -2,7 +2,7 @@ Source: pure-maps
 Section: graphics
 Priority: optional
 Maintainer: Sebastian Spaeth <Sebastian@SSpaeth.de>
-Build-Depends: debhelper-compat (= 13), python3,
+Build-Depends: debhelper-compat (= 13), cmake, python3,
 	       libs2-dev, qtbase5-dev | qtbase5-gles-dev, qt5-qmake,
 	       qttools5-dev-tools, qtpositioning5-dev, qtquickcontrols2-5-dev,
                qttools5-dev,
