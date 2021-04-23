@@ -5,6 +5,7 @@ Maintainer: Sebastian Spaeth <Sebastian@SSpaeth.de>
 Build-Depends: debhelper-compat (= 13), python3,
 	       libs2-dev, qtbase5-dev | qtbase5-gles-dev, qt5-qmake,
 	       qttools5-dev-tools, qtpositioning5-dev, qtquickcontrols2-5-dev,
+               qttools5-dev,
 Standards-Version: 4.5.1
 Rules-Requires-Root: no
 Homepage: https://github.com/rinigus/pure-maps
