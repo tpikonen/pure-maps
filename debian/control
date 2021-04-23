@@ -14,7 +14,7 @@ Package: pure-maps
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, qml-module-org-kde-kirigami2,
          qml-module-io-thp-pyotherside, qml-module-qtmultimedia,
-         libqt5multimedia5-plugins,
+         libqt5multimedia5-plugins
 	 qml-module-qtpositioning, qml-module-qtsensors,
 	 qml-module-qt-labs-settings, libnemodbus1, python3-gpxpy
 Recommends: espeak-ng-espeak | espeak
