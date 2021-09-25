@@ -9,6 +9,10 @@ export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 override_dh_auto_configure:
 	dh_auto_configure -- -DUSE_BUNDLED_GPXPY=OFF FLAVOR=kirigami
 
+override_dh_clean:
+	rm -rf tools/__pycache__/
+	dh_clean
+
 #override_dh_installdocs:
 # Do not install a copyright file
 # no /usr/share/docs/* needed!
