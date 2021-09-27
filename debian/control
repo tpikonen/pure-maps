@@ -26,6 +26,8 @@ Depends: ${shlibs:Depends}, ${misc:Depends},
  qml-module-qtpositioning,
  qml-module-qtsensors,
  qml-module-qt-labs-settings,
+ qml-module-qtquick-dialogs,
+ qml-module-qtquick-controls,
  libnemodbus1,
  python3-gpxpy
 Recommends: espeak-ng-espeak | espeak | flite
