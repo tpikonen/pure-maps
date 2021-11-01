@@ -7,7 +7,7 @@ export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 	dh $@
 
 override_dh_auto_configure:
-	dh_auto_configure -- -DUSE_BUNDLED_GPXPY=OFF -DFLAVOR=kirigami
+	dh_auto_configure -- -DUSE_BUNDLED_GPXPY=OFF -DUSE_BUNDLED_GEOMAG=OFF -DFLAVOR=kirigami
 
 override_dh_clean:
 	rm -rf tools/__pycache__/
