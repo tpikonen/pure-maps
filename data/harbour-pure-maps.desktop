@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Pure Maps
+Exec=harbour-pure-maps
+Icon=harbour-pure-maps
+Type=Application
+X-Nemo-Application-Type=silica-qt5
+
+[X-HarbourBackup]
+BackupPathList=.config/harbour-pure-maps

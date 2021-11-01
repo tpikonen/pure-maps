@@ -1,0 +1,15 @@
+{
+    "name": "@APP_NAME@.jonnius",
+    "description": "Maps and Navigation",
+    "architecture": "@CLICK_ARCH@",
+    "title": "@APP_TITLE@",
+    "hooks": {
+        "@APP_NAME@": {
+            "apparmor": "pure-maps.apparmor",
+            "desktop":  "pure-maps.desktop"
+        }
+    },
+    "version": "2.8.1",
+    "maintainer": "Rinigus <rinigus.git@gmail.org>",
+    "framework" : "@CLICK_FRAMEWORK@"
+}

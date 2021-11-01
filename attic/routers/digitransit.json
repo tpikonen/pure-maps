@@ -1,0 +1,12 @@
+{
+  "attribution": {
+    "Digitransit": "https://digitransit.fi/",
+    "© HSL": "https://www.reittiopas.fi/",
+    "© Liikennevirasto": "https://opas.matka.fi/"
+  },
+  "_description": "Public transport routing in Finland",
+  "geocoder": "digitransit",
+  "_modes": ["public transport"],
+  "name": "Digitransit",
+  "profiles": ["mixed", "online"]
+}

@@ -1,0 +1,11 @@
+{
+  "attribution": {
+    "© Sputnik": "http://maps.sputnik.ru/",
+    "© OpenStreetMap": "https://www.openstreetmap.org/copyright"
+  },
+  "format": "raster",
+  "name": "Sputnik",
+  "profiles": ["mixed", "online"],
+  "tile_size": 256,
+  "tile_url": "http://tiles.maps.sputnik.ru/{z}/{x}/{y}.png?tag=retina"
+}

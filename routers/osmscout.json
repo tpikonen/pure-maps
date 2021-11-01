@@ -1,0 +1,13 @@
+{
+  "attribution": {
+    "OSM Scout Server": "https://github.com/rinigus/osmscout-server",
+    "© OpenStreetMap": "https://www.openstreetmap.org/copyright",
+    "Public transport data from Transitland": "https://transit.land/"  
+  },
+  "_description": "Routing based on OpenStreetMap data",
+  "geocoder": "osmscout",
+  "_modes": ["car", "bicycle", "foot"],
+  "name": "OSM Scout",
+  "offline": true,
+  "profiles": ["mixed", "offline"]
+}

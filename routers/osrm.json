@@ -1,0 +1,10 @@
+{
+  "attribution": {
+    "OSRM": "http://project-osrm.org/",
+    "© OpenStreetMap": "https://www.openstreetmap.org/copyright"
+  },
+  "_description": "Routing based on OpenStreetMap data",
+  "_modes": ["car"],
+  "name": "OSRM",
+  "profiles": ["mixed", "online"]
+}
