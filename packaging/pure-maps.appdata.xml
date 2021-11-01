@@ -17,7 +17,7 @@
  <url type="bugtracker">https://github.com/rinigus/pure-maps/issues</url>
  <url type="donation">https://rinigus.github.io/donate</url>
  <url type="translate">https://www.transifex.com/rinigus/pure-maps</url>
- <launchable desktop-id="io.github.rinigus.PureMaps"/>
+ <launchable type="desktop-id">io.github.rinigus.PureMaps.desktop</launchable>
  <provides>
   <binary>pure-maps</binary>
  </provides>
@@ -38,6 +38,36 @@
  </screenshots>
  <metadata_license>CC-BY-SA-3.0</metadata_license>
  <releases>
+   <release  version="2.8.1" date="2021-10-17">
+     <description>
+       <ul>
+         <li>Bugfixes</li>
+       </ul>
+     </description>
+   </release>
+   <release  version="2.8.0" date="2021-10-17">
+     <description>
+       <ul>
+         <li>Add app-specific PositionSource</li>
+         <li>Add missing icons for navigation instructions [Lolek]</li>
+         <li>Add support for large number of languages by Valhalla</li>
+         <li>Drop support for Thunderforest maps</li>
+         <li>Adjust dependencies</li>
+         <li>Bugfixes and small enhancements</li>
+         <li>Update translations</li>
+       </ul>
+     </description>
+   </release>
+   <release  version="2.7.5" date="2021-05-22">
+     <description>
+       <ul>
+         <li>Allow to specify default font provider</li>
+         <li>Require QtPositioning 5.4 and use Qt calculated direction</li>
+         <li>Update translations</li>
+         <li>[sfos] Adjust packaging for Jolla Store</li>
+       </ul>
+     </description>
+   </release>
    <release  version="2.7.0" date="2021-04-09">
      <description>
        <ul>

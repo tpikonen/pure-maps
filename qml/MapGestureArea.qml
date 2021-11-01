@@ -17,7 +17,7 @@
  */
 
 import QtQuick 2.0
-import QtPositioning 5.3
+import QtPositioning 5.4
 import MapboxMap 1.0
 
 MapboxMapGestureArea {
@@ -39,7 +39,8 @@ MapboxMapGestureArea {
         if (app.mode !== modes.navigate &&
                 app.mode !== modes.followMe &&
                 app.mode !== modes.navigatePost &&
-                area.coordinatesMatch(geocoordinate, gps.position.coordinate)) {
+                gps.ready &&
+                area.coordinatesMatch(geocoordinate, gps.coordinate)) {
             map.autoCenter = !map.autoCenter;
             notification.flash(map.autoCenter ?
                                    app.tr("Auto-center on") :

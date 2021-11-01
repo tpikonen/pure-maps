@@ -17,7 +17,7 @@
  */
 
 import QtQuick 2.0
-import QtPositioning 5.3
+import QtPositioning 5.4
 import "."
 import "platform"
 
@@ -325,9 +325,10 @@ Item {
         if (!query || query === geo._prevAutocompleteQuery) return;
         geo._autocompletePending = true;
         geo._prevAutocompleteQuery = query;
-        var x = gps.position.coordinate.longitude;
-        var y = gps.position.coordinate.latitude;
-        py.call("poor.app.geocoder.autocomplete", [query, x, y], function(results) {
+        py.call("poor.app.geocoder.autocomplete",
+                gps.coordinateValid ? [query, gps.coordinate.longitude, gps.coordinate.latitude] :
+                                      [query],
+                function(results) {
             if (!geo._autocompletePending) return;
 
             geo._autocompletePending = false;
@@ -352,10 +353,11 @@ Item {
         setSearchResults([]);
         _autocompletePending = false; // skip any ongoing autocomplete search
         py.call_sync("poor.app.history.add_place", [query]);
-        var x = gps.position.coordinate.longitude;
-        var y = gps.position.coordinate.latitude;
         geo.update();
-        py.call("poor.app.geocoder.geocode", [query, x, y, null], function(results) {
+        py.call("poor.app.geocoder.geocode",
+                gps.coordinateValid ? [query, gps.coordinate.longitude, gps.coordinate.latitude] :
+                                      [query],
+                function(results) {
             // skip, new search or autocomplete was started
             if (_searchIndex !== mySearchIndex || !_searchPending) return;
 

@@ -18,6 +18,7 @@
 
 import QtQuick 2.0
 import QtMultimedia 5.6
+import QtPositioning 5.4
 import org.puremaps 1.0
 import "."
 import "platform"
@@ -49,6 +50,7 @@ ApplicationWindowPL {
     // and the associated constant Theme.itemSizeSmall.
     property real   listItemVerticalMargin: (styler.themeItemSizeSmall - 1.125 * styler.themeFontSizeMedium) / 2
     property var    map: null
+    property bool   mapboxKeyMissing: false
     property string mapMatchingMode: {
         if (!hasMapMatching) return "none";
         else if (app.mode === modes.navigate || app.mode === modes.followMe || app.mode === modes.navigatePost)
@@ -197,7 +199,7 @@ ApplicationWindowPL {
 
     function getPosition() {
         // Return the coordinates of the current position.
-        return [gps.position.coordinate.longitude, gps.position.coordinate.latitude];
+        return [gps.coordinate.longitude, gps.coordinate.latitude];
     }
 
     function hideMenu(menutext) {
@@ -220,6 +222,8 @@ ApplicationWindowPL {
         else
             app.hasMapMatching = mapMatchingAvailable;
         initialized = true;
+        // after all objects and pages are initialized
+        CmdLineParser.process()
     }
 
     function openMapErrorMessage(error) {

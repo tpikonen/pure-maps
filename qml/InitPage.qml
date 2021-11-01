@@ -24,7 +24,6 @@ PageEmptyPL {
     id: page
     title: "Pure Maps"
 
-    property bool mapboxKeyMissing: false
     property bool ready: false
 
     BusyModal {
@@ -40,8 +39,9 @@ PageEmptyPL {
             page.ready = true
             // initialize conf before anything else
             app.conf.initialize();
+            app.conf.set("font_provider", defaultFontProvider);
             var k = py.call_sync("poor.key.get_mapbox_key", [])
-            if (k == "EMPTY") {
+            if (defaultFontProvider == "mapbox" && k == "EMPTY") {
                 var d = app.push(Qt.resolvedUrl("MessagePage.qml"), {
                                      "acceptText": app.tr("Dismiss"),
                                      "title": app.tr("Missing Mapbox key"),
@@ -50,7 +50,7 @@ PageEmptyPL {
                                                        "in Preferences. This key is not needed if you plan to use " +
                                                        "Pure Maps with the offline map provider.")
                                  });
-                mapboxKeyMissing = true;
+                app.mapboxKeyMissing = true;
             } else start();
         }
     }
@@ -59,7 +59,5 @@ PageEmptyPL {
 
     function start() {
         app.rootPage = app.pages.replace(Qt.resolvedUrl("RootPage.qml"));
-        app.initialize();
-        if (mapboxKeyMissing) app.showMenu();
     }
 }

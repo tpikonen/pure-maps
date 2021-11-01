@@ -15,6 +15,7 @@ add_compile_options(
     -DAPP_NAME="${APP_NAME}"
     -DAPP_VERSION="${PM_VERSION}"
     -DDEFAULT_DATA_PREFIX="${DATADIR_RUNNING}/"
+    -DDEFAULT_FONTPROVIDER="${DEFAULT_FONTPROVIDER}"
     -DQT_DEPRECATED_WARNINGS)
 
 if(CMAKE_BUILD_TYPE STREQUAL "release")
@@ -36,6 +37,10 @@ endif()
 
 if(S2LIBS)
     link_directories(${S2LIBS})
+endif()
+
+if(QML_IMPORT_PATH)
+    add_definitions(-DQML_IMPORT_PATH=${QML_IMPORT_PATH})
 endif()
 
 add_executable(${APP_NAME} ${PM_SRC} ${PM_HEADERS})

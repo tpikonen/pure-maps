@@ -9,7 +9,7 @@
 %if 0%{?sailfishos}
 # "Harbour RPM packages should not provide anything."
 %define __provides_exclude_from ^%{_datadir}/.*$
-%define __requires_exclude ^libs2.*$
+%define __requires_exclude ^libs2|libqmapboxgl.*$
 %endif
 
 %if 0%{?sailfishos}
@@ -18,7 +18,7 @@ Name: harbour-pure-maps
 Name: pure-maps
 %endif
 
-Version: 2.7.1
+Version: 2.8.1
 Release: 1
 
 Summary: Maps and navigation
@@ -41,7 +41,11 @@ BuildRequires: pkgconfig(Qt5DBus)
 BuildRequires: s2geometry-devel
 BuildRequires: cmake
 
+%if !0%{?jollastore}
 Requires: mapboxgl-qml >= 1.7.0
+%else
+BuildRequires: mapboxgl-qml >= 1.7.0
+%endif
 
 %if 0%{?sailfishos}
 BuildRequires: qt5-qttools-linguist
@@ -56,13 +60,11 @@ BuildRequires: qt5-linguist
 BuildRequires: cmake(KF5Kirigami2)
 BuildRequires: pkgconfig(Qt5QuickControls2)
 Requires: kf5-kirigami2
-Requires: mapboxgl-qml
+Requires: mapboxgl-qml >= 1.7.0
 Requires: pyotherside
 Requires: qt5-qtmultimedia
 Requires: qt5-qtlocation
 Requires: mimic
-Requires: nemo-qml-plugin-dbus-qt5
-Requires: qml-module-clipboard
 Requires: dbus-tools
 %endif
 
@@ -75,9 +77,10 @@ search for nearby places by type and share your location.
 cp %{SOURCE1} tools/
 #tools/manage-keys inject poor || true
 
-mkdir build-rpm
 
 %build
+
+mkdir build-rpm || true
 
 cd build-rpm
 
@@ -91,6 +94,9 @@ cmake \
     -DPM_VERSION='%{version}-%{release}' \
     -DFLAVOR=silica \
     -DUSE_BUNDLED_GPXPY=ON \
+%if 0%{?jollastore}
+    -DQML_IMPORT_PATH=\"%{_datadir}/%{name}/lib/qml\" \
+%endif
     -DPYTHON_EXE=python3 ..
 %else
 %cmake \
@@ -113,17 +119,35 @@ make DESTDIR=%{buildroot} install
 mkdir -p %{buildroot}%{_datadir}/%{name}/lib
 cp %{_libdir}/libs2.so %{buildroot}%{_datadir}/%{name}/lib
 
+%if 0%{?jollastore}
+mkdir -p %{buildroot}%{_datadir}/%{name}/lib/qml/MapboxMap
+cp %{_libdir}/qt5/qml/MapboxMap/* %{buildroot}%{_datadir}/%{name}/lib/qml/MapboxMap
+cp %{_libdir}/libqmapboxgl.so.1* %{buildroot}%{_datadir}/%{name}/lib
+sed -i 's/QtPositioning 5.3/QtPositioning 5.4/g' %{buildroot}%{_datadir}/%{name}/lib/qml/MapboxMap/MapboxMapGestureArea.qml
+sed -i 's/X-Nemo-Application-Type=silica-qt5/X-Nemo-Application-Type=no-invoker/g' %{buildroot}%{_datadir}/applications/%{name}.desktop
+%endif
+
 # strip executable bit from all libraries
 chmod -x %{buildroot}%{_datadir}/%{name}/lib/*.so*
+%if 0%{?jollastore}
+chmod -x %{buildroot}%{_datadir}/%{name}/lib/qml/MapboxMap/*.so*
+%endif
 
 %endif # sailfishos
+
+%if 0%{?jollastore}
+# remove not allowed desktop handler
+rm %{buildroot}%{_datadir}/applications/harbour-pure-maps-uri-handler.desktop || true
+%endif
 
 %files
 %defattr(-,root,root,-)
 %{_bindir}/%{name}
 %{_datadir}/%{name}
 %{_datadir}/applications/%{name}.desktop
+%if !0%{?jollastore}
 %{_datadir}/applications/%{name}-uri-handler.desktop
+%endif
 %{_datadir}/icons/hicolor/*/apps/%{name}.png
 %if 0%{?sailfishos}
 %exclude %{_datadir}/metainfo/%{name}.appdata.xml

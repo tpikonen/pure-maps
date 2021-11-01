@@ -27,7 +27,7 @@ PagePL {
     acceptIconName: styler.iconNearby
     acceptText: app.tr("Search")
     canNavigateForward: page.near &&
-                        (page.nearText !== app.tr("Current position") || gps.ready) &&
+                        (page.nearText !== app.tr("Current position") || gps.coordinateValid) &&
                         (page.queryType.length > 0 || page.queryName.length > 0)
 
     pageMenu: PageMenuPL {
@@ -142,7 +142,13 @@ PagePL {
             var uri = Qt.resolvedUrl(py.evaluate("poor.app.guide.settings_qml_uri"));
             if (!uri) return;
             var component = Qt.createComponent(uri);
+            if (component.status === Component.Error) {
+                console.log('Error while creating component');
+                console.log(component.errorString());
+                return null;
+            }
             column.settings = component.createObject(column);
+            if (!column.settings) return;
             column.settings.anchors.left = column.left;
             column.settings.anchors.right = column.right;
             column.settings.width = column.width;
