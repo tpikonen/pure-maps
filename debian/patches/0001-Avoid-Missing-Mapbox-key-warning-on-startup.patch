@@ -1,0 +1,28 @@
+From: Teemu Ikonen <tpikonen@mailbox.org>
+Date: Fri, 1 Oct 2021 11:08:42 +0300
+Subject: Avoid 'Missing Mapbox key' warning on startup
+
+Replace Mapbox with OpenTopoMap as default map and osmscout as default
+font provider.
+---
+ CMakeLists.txt | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 7be2e12..18a4c2a 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -17,11 +17,11 @@ option(USE_BUNDLED_GPXPY "Use a bundled version of GPXPY rather than a system-wi
+ set(QML_IMPORT_PATH "" CACHE STRING "Additional QML import path")
+ 
+ set(DEFAULT_PROFILE "online" CACHE STRING "Default profile. Supported profile selection: online, offline")
+-set(DEFAULT_BASEMAP "Mapbox" CACHE STRING "Default basemap for online profile")
++set(DEFAULT_BASEMAP "OpenTopoMap" CACHE STRING "Default basemap for online profile")
+ set(DEFAULT_GEOCODER "photon" CACHE STRING "Default geocoder for online profile")
+ set(DEFAULT_GUIDE "foursquare" CACHE STRING "Default guide for online profile")
+ set(DEFAULT_ROUTER "stadiamaps" CACHE STRING "Default router for online profile")
+-set(DEFAULT_FONTPROVIDER "mapbox" CACHE STRING "Default font provider. Supported: mapbox, osmscout")
++set(DEFAULT_FONTPROVIDER "osmscout" CACHE STRING "Default font provider. Supported: mapbox, osmscout")
+ 
+ # set project version used in About message
+ if(NOT PM_VERSION)

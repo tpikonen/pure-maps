@@ -1,0 +1,57 @@
+From: Teemu Ikonen <tpikonen@mailbox.org>
+Date: Mon, 11 Oct 2021 21:16:38 +0300
+Subject: CMake: Add USE_BUNDLED_GEOMAG option
+
+Try to import poor.geomag first in magfield.py, then system geomag.
+---
+ CMakeLists.txt            |  1 +
+ poor/magfield.py          |  5 ++++-
+ thirdparty/CMakeLists.txt | 10 ++++++----
+ 3 files changed, 11 insertions(+), 5 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 18a4c2a..fb6adea 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -14,6 +14,7 @@ option(RUN_FROM_SOURCE "Run from source, this is mainly intended for easy develo
+ set(S2INCLUDES "" CACHE STRING "Custom installed location for s2geometry, includes")
+ set(S2LIBS "" CACHE STRING "Custom installed location for s2geometry, libs")
+ option(USE_BUNDLED_GPXPY "Use a bundled version of GPXPY rather than a system-wide version" ON)
++option(USE_BUNDLED_GEOMAG "Use a bundled version of geomag rather than a system-wide version" ON)
+ set(QML_IMPORT_PATH "" CACHE STRING "Additional QML import path")
+ 
+ set(DEFAULT_PROFILE "online" CACHE STRING "Default profile. Supported profile selection: online, offline")
+diff --git a/poor/magfield.py b/poor/magfield.py
+index 58ff211..ee6ead8 100644
+--- a/poor/magfield.py
++++ b/poor/magfield.py
+@@ -18,7 +18,10 @@
+ """Calculates magnetic declination."""
+ 
+ from datetime import datetime, timedelta
+-from poor.geomag import WorldMagneticModel
++try:
++    from poor.geomag import WorldMagneticModel
++except ImportError:
++    from geomag import WorldMagneticModel
+ 
+ __all__ = ("MagField")
+ 
+diff --git a/thirdparty/CMakeLists.txt b/thirdparty/CMakeLists.txt
+index dce2dfd..a6d3523 100644
+--- a/thirdparty/CMakeLists.txt
++++ b/thirdparty/CMakeLists.txt
+@@ -1,7 +1,9 @@
+-file(GLOB GEOMAG_SRC LIST_DIRECTORIES false geomag/geomag/*.py)
+-install(FILES ${GEOMAG_SRC} DESTINATION ${DATADIR}/poor/geomag)
+-install(FILES geomag/geomag/model_data/WMM.COF
+-    DESTINATION ${DATADIR}/poor/geomag/model_data)
++if(USE_BUNDLED_GEOMAG)
++    file(GLOB GEOMAG_SRC LIST_DIRECTORIES false geomag/geomag/*.py)
++    install(FILES ${GEOMAG_SRC} DESTINATION ${DATADIR}/poor/geomag)
++    install(FILES geomag/geomag/model_data/WMM.COF
++        DESTINATION ${DATADIR}/poor/geomag/model_data)
++endif()
+ 
+ if(USE_BUNDLED_GPXPY)
+     file(GLOB GPXPY_SRC LIST_DIRECTORIES false gpxpy/gpxpy/*.py)
