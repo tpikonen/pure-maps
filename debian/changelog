@@ -1,4 +1,10 @@
-pure-maps (2.8.1-1) UNRELEASED; urgency=medium
+pure-maps (2.9.1-1) UNRELEASED; urgency=medium
+
+  * New upstream release
+
+ -- Teemu Ikonen <tpikonen@gmail.com>  Wed, 08 Dec 2021 11:39:03 +0200
+
+pure-maps (2.8.1-1) experimental; urgency=medium
 
   * New upstream release
 
