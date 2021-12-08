@@ -272,9 +272,108 @@ PagePL {
             }
 
             ExpandingSectionPL {
+                id: sectionLicenses
+                title: app.tr("Licenses")
+                content.sourceComponent: Column {
+                    spacing: styler.themePaddingMedium
+                    width: sectionLicenses.width
+
+                    ListItemLabel {
+                        color: styler.themeHighlightColor
+                        text: app.tr("List of the licenses and whether they are accepted or declined. " +
+                                     "Here you can change the acceptance of each license.")
+                        truncMode: truncModes.none
+                        wrapMode: Text.WordWrap
+                    }
+
+                    ListItemLabel {
+                        color: styler.themeHighlightColor
+                        text: app.tr("Please restart application after changing the acceptance state of the license(s).")
+                        truncMode: truncModes.none
+                        wrapMode: Text.WordWrap
+                    }
+
+                    Column {
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+
+                        Repeater {
+                            id: licenseRep
+                            delegate: ListItemPL {
+                                id: listItem
+                                contentHeight: licenseItemColumn.height
+                                Column {
+                                    id: licenseItemColumn
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    spacing: styler.themePaddingSmall
+
+                                    Spacer {
+                                        height: Math.max(0, styler.themePaddingLarge / 2 - styler.themePaddingSmall)
+                                    }
+
+                                    ListItemLabel {
+                                        color: listItem.highlighted ? styler.themeHighlightColor :
+                                                                      styler.themePrimaryColor
+                                        text: model.title
+                                    }
+
+                                    ListItemLabel {
+                                        color: listItem.highlighted ? styler.themeHighlightColor :
+                                                                      styler.themePrimaryColor
+                                        horizontalAlignment: Text.AlignRight
+                                        text: {
+                                            if (model.status === -1) return app.tr("Declined")
+                                            if (model.status === 1) return app.tr("Accepted")
+                                            return app.tr("Unset")
+                                        }
+                                    }
+
+                                    Spacer {
+                                        height: Math.max(0, styler.themePaddingLarge / 2 - styler.themePaddingSmall)
+                                    }
+                                }
+
+                                onClicked: {
+                                    var d = app.push(Qt.resolvedUrl("LicensePage.qml"), {
+                                                         "title": model.title,
+                                                         "key": model.key,
+                                                         "text": model.text,
+                                                         "acceptLicense": model.status!==-1
+                                                     });
+                                    d.accepted.connect(licenseRep.load)
+                                }
+                            }
+                            model: ListModel {}
+
+                            Component.onCompleted: load()
+
+                            function load() {
+                                model.clear();
+                                py.call("poor.key.licenses", [], function(licenses) {
+                                    for (var i = 0; i < licenses.length; i++)
+                                        model.append({
+                                                         "key": licenses[i].id,
+                                                         "text": licenses[i].text,
+                                                         "title": licenses[i].title,
+                                                         "status": licenses[i].status
+                                                     });
+                                });
+                            }
+                        }
+                    }
+
+                    Spacer {
+                        height: styler.themePaddingLarge
+                    }
+                }
+            }
+
+            ExpandingSectionPL {
                 id: sectionKeys
                 title: app.tr("API keys")
                 content.sourceComponent: Column {
+                    id: keysColumn
                     spacing: styler.themePaddingMedium
                     width: sectionKeys.width
 
@@ -294,28 +393,49 @@ PagePL {
                         wrapMode: Text.WordWrap
                     }
 
-                    FormLayoutPL {
-                        spacing: styler.themePaddingMedium
+                    Column {
+                        id: keysForm
+                        spacing: styler.themePaddingLarge
+                        width: keysColumn.width
                         Repeater {
-                            delegate: TextFieldPL {
-                                description: model.description
-                                label: model.label
-                                placeholderText: model.label
-                                text: model.value
-                                onTextChanged: py.call_sync("poor.key.set",
-                                                            [model.key, text])
+                            delegate: Column {
+                                spacing: styler.themePaddingMedium
+                                width: keysForm.width
+                                property bool isHeader: model.header
+
+                                SectionHeaderPL {
+                                    text: model.header
+                                    visible: text
+                                }
+
+                                ListItemLabel {
+                                    color: styler.themeHighlightColor
+                                    text: model.description
+                                    truncMode: truncModes.none
+                                    visible: text
+                                    wrapMode: Text.WordWrap
+                                }
+
+                                TextFieldPL {
+                                    label: model.label
+                                    placeholderText: model.label
+                                    text: model.value
+                                    visible: !parent.isHeader
+                                    onTextChanged: py.call_sync("poor.key.set",
+                                                                [model.key, text])
+                                }
                             }
                             model: ListModel {}
 
                             Component.onCompleted: {
-                                // Load router model items from the Python backend.
-                                py.call("poor.key.list", [], function(keys) {
+                                py.call("poor.key.list", [true], function(keys) {
                                     for (var i = 0; i < keys.length; i++)
                                         model.append({
-                                                         "key": keys[i].id,
-                                                         "description": keys[i].description,
-                                                         "label": keys[i].label,
-                                                         "value": keys[i].value
+                                                         "header": keys[i].header || "",
+                                                         "key": keys[i].id || "",
+                                                         "description": keys[i].description || "",
+                                                         "label": keys[i].label || "",
+                                                         "value": keys[i].value || ""
                                                      });
                                 });
                             }
@@ -339,7 +459,6 @@ PagePL {
                         description: app.tr("Select mode of transportation. Only applies when Pure Maps is not navigating. Uses OSM Scout Server for its operation.")
                         label: app.tr("Snap position to road")
                         model: [ app.tr("None"), app.tr("Car"), app.tr("Bicycle"), app.tr("Foot") ]
-                        visible: app.hasMapMatching
                         property var values: ["none", "car", "bicycle", "foot"]
                         Component.onCompleted: {
                             var value = app.conf.mapMatchingWhenIdle;
@@ -408,7 +527,6 @@ PagePL {
                         checked: app.conf.mapMatchingWhenNavigating
                         description: app.tr("Uses OSM Scout Server for its operation.")
                         text: app.tr("Snap position to road")
-                        visible: app.hasMapMatching
                         onCheckedChanged: {
                             if (mapmatchingSwitch.checked===app.conf.mapMatchingWhenNavigating) return;
                             app.conf.set("map_matching_when_navigating", mapmatchingSwitch.checked);
@@ -488,6 +606,38 @@ PagePL {
                                 var v = speedLimitComboBox.values[index];
                                 if (v !== app.conf.showSpeedLimit)
                                     app.conf.set("show_speed_limit", v);
+                            }
+                        }
+
+                        ComboBoxPL {
+                            id: horizontalAccuracyComboBox
+                            description: app.tr("Accuracy of the positioning supported by device. Deviation from the route below the specified accuracy will be ignored.")
+                            label: app.tr("Positioning accuracy")
+                            model: [
+                                py.call_sync("poor.util.format_distance", [10, 2]),
+                                py.call_sync("poor.util.format_distance", [15, 2]),
+                                py.call_sync("poor.util.format_distance", [20, 2]),
+                                py.call_sync("poor.util.format_distance", [25, 2]),
+                                py.call_sync("poor.util.format_distance", [35, 2]),
+                                py.call_sync("poor.util.format_distance", [50, 2])
+                            ]
+                            property var values: [10, 15, 20, 25, 35, 50]
+                            Component.onCompleted: {
+                                var value = app.conf.navigationHorizontalAccuracy;
+                                var r = values[0];
+                                var ci = 0;
+                                for (var i=1; i < values.length; i++)
+                                    if (Math.abs(r - value) > Math.abs(values[i] - value)) {
+                                        r = values[i];
+                                        ci = i;
+                                    }
+                                currentIndex = ci;
+                            }
+                            onCurrentIndexChanged: {
+                                var index = currentIndex;
+                                var v = values[index];
+                                if (v !== app.conf.navigationHorizontalAccuracy)
+                                    app.conf.set("navigation_horizontal_accuracy", v);
                             }
                         }
                     }

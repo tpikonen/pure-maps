@@ -104,7 +104,8 @@ MenuDrawerPL {
     MenuDrawerSubmenuPL {
         id: profiles
         iconName: {
-            if (app.conf.profile === "online") return styler.iconProfileOnline;
+            if (app.conf.profile === "online" || app.conf.profile === "HERE")
+                return styler.iconProfileOnline;
             if (app.conf.profile === "offline") return styler.iconProfileOffline;
             return styler.iconProfileMixed;
         }
@@ -120,6 +121,14 @@ MenuDrawerPL {
             checked: app.conf.profile === "offline"
             text: app.tr("Offline")
             onClicked: profiles.set("offline")
+        }
+
+        MenuDrawerSubmenuItemPL {
+            checked: app.conf.profile === "HERE"
+            enabled: available
+            text: available ? app.tr("HERE - Online") : app.tr("HERE (disabled)")
+            onClicked: if (available) profiles.set("HERE")
+            property bool available: py.evaluate("poor.key.has_here")
         }
 
         MenuDrawerSubmenuItemPL {

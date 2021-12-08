@@ -18,6 +18,7 @@
 """An application to display maps and stuff."""
 
 import poor
+import random
 import sys
 
 __all__ = ("Application",)
@@ -29,14 +30,20 @@ class Application:
 
     def __init__(self):
         """Initialize an :class:`Application` instance."""
+        # some of the components are initialized separately
+        # after handling of all licenses
+        random.seed()
+        self.history = poor.HistoryManager()
+        self.magfield = poor.MagField()
+        self.sun = poor.Sun()
+        self._voice = {}
+
+    def initialize(self):
+        """Initialize all components that may depend on licenses."""
         self.basemap = poor.MapManager()
         self.geocoder = None
         self.guide = None
-        self.history = poor.HistoryManager()
-        self.magfield = poor.MagField()
         self.router = None
-        self.sun = poor.Sun()
-        self._voice = {}
         self.set_basemap(poor.conf.basemap)
         self.set_geocoder(poor.conf.geocoder)
         self.set_guide(poor.conf.guide)
@@ -52,10 +59,6 @@ class Application:
                     if item["text"] not in (x["text"] for x in items):
                         items.append(item)
         return items
-
-    def has_mapmatching(self):
-        """Return True if map matching requirements are met"""
-        return (poor.util.requirement_found("harbour-osmscout-server") or poor.util.requirement_found("osmscout-server"))
 
     def quit(self):
         """Quit the application."""

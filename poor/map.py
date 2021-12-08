@@ -67,8 +67,16 @@ class Map:
         self.type = values.get("type", "")
         self.url_suffix = values.get("url_suffix", "")
         self.vehicle = values.get("vehicle", "")
+        self.available = True
+        # check mapbox for availability
+        if self.style_url.startswith('mapbox://') and not poor.key.has_mapbox:
+            print('Mapbox API key missing: skipping', id)
+            self.available = False
         for k in self.keys:
-            v = poor.key.get(k)
+            v = poor.key.get(k).strip()
+            if not v:
+                print('API key missing:', k, 'disabling', id)
+                self.available = False
             self.style_url = self.style_url.replace("#" + k + "#", v)
             self.tile_url = self.tile_url.replace("#" + k + "#", v)
 
@@ -126,6 +134,8 @@ class Map:
         glyphs = "mapbox://fonts/mapbox/{fontstack}/{range}.pbf"
         if poor.conf.font_provider == "osmscout":
             glyphs = "http://127.0.0.1:8553/v1/mbgl/glyphs?stack={fontstack}&range={range}"
+        elif poor.conf.font_provider == "maptiler":
+            glyphs = "https://api.maptiler.com/fonts/{fontstack}/{range}.pbf?key=" + poor.key.maptiler_key
         return json.dumps({
             "id": "raster",
             "glyphs": glyphs,
@@ -178,18 +188,25 @@ class MapManager:
 
     def __init__(self):
         """Initialize a :class:`MapManager` instance."""
-        if hasattr(self, "profile"): return
+        # always reset on init
         self.basemap = None
         self.basemap_types = set()
         self.current_lang = None
         self.current_map = None
-        # load map descriptions
+        # load map descriptions only when initializing manager the first time
+        if hasattr(self, "profile"): return
+        self.profile = poor.conf.profile
         maps = poor.util.get_basemaps()
         maps.sort(key=lambda x: x["pid"])
         self._providers = collections.defaultdict(list)
+        self._providers_disabled = set()
         for m in maps:
             provider = m.get("provider", m["name"])
-            self._providers[provider].append(Map(m["pid"], values=m))
+            mi = Map(m["pid"], values=m)
+            if mi.available:
+                self._providers[provider].append(mi)
+            else:
+                self._providers_disabled.add(provider)
 
     @property
     def attribution(self):
@@ -249,11 +266,19 @@ class MapManager:
             provider = {
                 "pid": i,
                 "active": (i == self.basemap),
+                "available": True,
                 "default": (i == default),
                 "name": i
             }
             providers.append(provider)
-        providers.sort(key=lambda x: x["name"])
+        for i in self._providers_disabled:
+            provider = {
+                "pid": i,
+                "name": i,
+                "available": False
+                }
+            providers.append(provider)
+        providers.sort(key=lambda x: (not x["available"],x["name"]))
         return providers
 
     @property
@@ -321,6 +346,8 @@ class MapManager:
         self.basemap = id
         if self.basemap not in self._providers.keys():
             self.basemap = poor.conf.get_default("basemap")
+        if self.basemap not in self._providers.keys():
+            self.basemap = poor.conf.basemap_fallback
         self.basemap_types = set([i.type for i in self._providers[self.basemap]])
         self._find_map()
         poor.conf.set_basemap(self.basemap)

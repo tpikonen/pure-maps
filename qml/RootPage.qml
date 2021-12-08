@@ -33,7 +33,7 @@ PageEmptyPL {
     GeocodeButton { id: geocodeButton }
     Map {
         id: map
-        accessToken: py.call_sync("poor.key.get_mapbox_key", [])
+        accessToken: py.evaluate("poor.key.mapbox_key")
     }
     MenuButton { id: menuButton }
     Meters { id: meters }
@@ -137,7 +137,7 @@ PageEmptyPL {
         // finish initialization after the root page is shown
         if (!app.initialized) {
             app.initialize();
-            if (app.mapboxKeyMissing) app.showMenu();
+            if (app.fontKeyMissing) app.showMenu();
         }
     }
 }
