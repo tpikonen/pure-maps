@@ -13,6 +13,10 @@
 
 #include "dbustracker.h"
 
+#ifdef USE_BUNDLED_GEOCLUE2
+#include "geoclue2/qgeopositioninfosource_geoclue2.h"
+#endif
+
 // use var without m_ prefix
 #define SET(var, value) { auto t=(value); if (m_##var != t) { m_##var=t; /*qDebug() << "Emit " #var;*/ emit var##Changed(); } }
 
@@ -27,9 +31,12 @@
 #define MAPMATCHING_SERVICE "io.github.rinigus.OSMScoutServer"
 #define MAPMATCHING_PATH    "/io/github/rinigus/OSMScoutServer/mapmatching"
 
+Q_LOGGING_CATEGORY(lcPositioning, "puremaps.positioning", QtCriticalMsg)
+
 PositionSource::PositionSource(QObject *parent) : QObject(parent)
 {
   m_source = QGeoPositionInfoSource::createDefaultSource(this);
+
   if (!m_source)
     {
       qWarning() << "Failed to acquire QGeoPositionInfoSource";
@@ -41,6 +48,13 @@ PositionSource::PositionSource(QObject *parent) : QObject(parent)
     {
       m_directionCalculate = true;
       qInfo() << "Calculate direction using a sequence of coordinates";
+
+#ifdef USE_BUNDLED_GEOCLUE2
+      // replace system-provided geoclue2 with the bundled one
+      m_source->deleteLater();
+      m_source = new PM::QGeoPositionInfoSourceGeoclue2(this);
+      qInfo() << "Replacing system-provided Geoclue2 with the bundled plugin";
+#endif
     }
 
   m_source->setPreferredPositioningMethods(QGeoPositionInfoSource::SatellitePositioningMethods);
@@ -55,6 +69,13 @@ PositionSource::PositionSource(QObject *parent) : QObject(parent)
   // network
   connect(&m_networkManager, &QNetworkAccessManager::finished, this, &PositionSource::onNetworkFinished);
 
+  // map matching
+  m_mapmatch = new OSMScoutMapMatch(MAPMATCHING_SERVICE,
+                                    MAPMATCHING_PATH,
+                                    QDBusConnection::sessionBus(), this);
+  connect(m_mapmatch, &OSMScoutMapMatch::ActiveChanged,
+          this, &PositionSource::checkMapMatchAvailable);
+
   // track map matching service
   DBusTracker::instance()->track(MAPMATCHING_SERVICE);
   connect(DBusTracker::instance(), &DBusTracker::serviceAppeared,
@@ -67,8 +88,12 @@ PositionSource::PositionSource(QObject *parent) : QObject(parent)
   connect(&m_timer, &QTimer::timeout, this, &PositionSource::onTestingTimer);
 
   m_mapMatchingActivateTimer.setInterval(5000);
-  m_mapMatchingActivateTimer.setSingleShot(false);
+  m_mapMatchingActivateTimer.setSingleShot(true);
   connect(&m_mapMatchingActivateTimer, &QTimer::timeout, this, &PositionSource::onMapMatchingActivateTimer);
+
+  // check current state
+  checkMapMatchAvailable();
+  resetMapMatchingValues();
 }
 
 void PositionSource::setActive(bool active)
@@ -89,6 +114,7 @@ void PositionSource::setActive(bool active)
 
 void PositionSource::setPosition(const QGeoPositionInfo &info)
 {
+  qCInfo(lcPositioning) << "setPosition:" << info;
   SETWITHVALID(coordinateDevice, info.coordinate(),
                info.isValid() &&
                !qIsNaN(info.coordinate().latitude()) &&
@@ -103,9 +129,9 @@ void PositionSource::setPosition(const QGeoPositionInfo &info)
     {
       if (m_horizontalAccuracyValid && m_coordinateDeviceValid && m_horizontalAccuracy < 100)
         {
-          float threshold = m_horizontalAccuracy;
+          float threshold = std::max(10.0f, m_horizontalAccuracy);
           if (m_history.empty()) m_history.push_back(m_coordinateDevice);
-          QGeoCoordinate &last = m_history.back();
+          QGeoCoordinate last = m_history.back();
           if (last.distanceTo(m_coordinateDevice) > threshold)
             {
               m_history.push_back(m_coordinateDevice);
@@ -126,6 +152,8 @@ void PositionSource::setPosition(const QGeoPositionInfo &info)
               SET(directionDevice, dir);
               SET(directionDeviceValid, true);
               m_directionTimestamp = QTime::currentTime();
+              qCInfo(lcPositioning) << "Calculated direction:" << m_directionDevice << "history:" << m_history.size() << "distance to last:"
+                                    << last.distanceTo(m_coordinateDevice) << "threshold:" << threshold;
             }
         }
 
@@ -245,32 +273,6 @@ void PositionSource::onPositionUpdated(const QGeoPositionInfo &info)
 /// Map matching support
 ///
 
-void PositionSource::setHasMapMatching(bool hasMapMatching)
-{
-  SET(hasMapMatching, hasMapMatching);
-
-  if (!m_hasMapMatching)
-    {
-      if (m_mapmatch)
-        {
-          m_mapmatch->deleteLater();
-          m_mapmatch = nullptr;
-        }
-    }
-  else if (!m_mapmatch && m_hasMapMatching)
-    {
-      m_mapmatch = new OSMScoutMapMatch(MAPMATCHING_SERVICE,
-                                        MAPMATCHING_PATH,
-                                        QDBusConnection::sessionBus(), this);
-      // connect signals
-      connect(m_mapmatch, &OSMScoutMapMatch::ActiveChanged,
-              this, &PositionSource::checkMapMatchAvailable);
-    }
-
-  checkMapMatchAvailable();
-  resetMapMatchingValues();
-}
-
 void PositionSource::setMapMatchingMode(int mapMatchingMode)
 {
   SET(mapMatchingMode, mapMatchingMode);
@@ -282,7 +284,7 @@ void PositionSource::setMapMatchingMode(int mapMatchingMode)
 
 void PositionSource::checkMapMatchAvailable()
 {
-  bool want = (m_active && m_hasMapMatching && m_mapmatch && m_mapMatchingMode > 0);
+  bool want = (m_active && m_mapmatch && m_mapMatchingMode > 0);
 
   // if we don't need map matching, do not activate it via DBus
   // or network

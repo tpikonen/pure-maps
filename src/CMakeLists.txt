@@ -24,13 +24,6 @@ if(CMAKE_BUILD_TYPE STREQUAL "release")
         -QT_NO_DEBUG_OUTPUT)
 endif()
 
-if(MAPMATCHING_CHECK_RUNTIME)
-    add_definitions(-DMAPMATCHING_CHECK_RUNTIME)
-endif()
-if(MAPMATCHING_AVAILABLE)
-    add_definitions(-DMAPMATCHING_AVAILABLE)
-endif()
-
 if(S2INCLUDES)
     include_directories(${S2INCLUDES})
 endif()
@@ -41,6 +34,17 @@ endif()
 
 if(QML_IMPORT_PATH)
     add_definitions(-DQML_IMPORT_PATH=${QML_IMPORT_PATH})
+endif()
+
+if(USE_BUNDLED_GEOCLUE2)
+    add_definitions(-DUSE_BUNDLED_GEOCLUE2)
+
+    list(APPEND PM_SRC ${GCLUE2_SRC})
+    list(APPEND PM_HEADERS ${GCLUE2_HEADERS})
+
+    set_source_files_properties(${GCLUE2_XML}
+                                PROPERTIES INCLUDE geoclue2/geocluetypes.h NO_NAMESPACE ON)
+    qt5_add_dbus_interfaces(PM_SRC ${GCLUE2_XML})
 endif()
 
 add_executable(${APP_NAME} ${PM_SRC} ${PM_HEADERS})

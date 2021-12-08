@@ -1,27 +1,27 @@
 cmake_minimum_required(VERSION 3.5.1) # Latest version as supported by Ubuntu Touch
 
 project(pure-maps
-    VERSION 2.8.1
+    VERSION 2.9.1
     DESCRIPTION "Maps and navigation")
 
 # options
 set(APP_NAME "" CACHE STRING "Name of the application, specify if custom name is needed")
 set(FLAVOR "kirigami" CACHE STRING "Platform to build support for. Supported platforms: kirigami, silica, qtcontrols, uuitk")
-option(MAPMATCHING_CHECK_RUNTIME "Check map matching availibility at runtime" ON)
-option(MAPMATCHING_AVAILABLE "Availability of map matching if not checked at runtime. If checking is enabled at runtime, this option is ignored" ON)
 set(PYTHON_EXE "auto" CACHE STRING "Set python3 executable. If set to 'auto', cmake will try to find it.")
 option(RUN_FROM_SOURCE "Run from source, this is mainly intended for easy development" OFF)
 set(S2INCLUDES "" CACHE STRING "Custom installed location for s2geometry, includes")
 set(S2LIBS "" CACHE STRING "Custom installed location for s2geometry, libs")
 option(USE_BUNDLED_GPXPY "Use a bundled version of GPXPY rather than a system-wide version" ON)
+option(USE_BUNDLED_GEOMAG "Use a bundled version of geomag rather than a system-wide version" ON)
+option(USE_BUNDLED_GEOCLUE2 "Use a bundled version of Geoclue2 Qt plugin with bugfixes" OFF)
 set(QML_IMPORT_PATH "" CACHE STRING "Additional QML import path")
 
 set(DEFAULT_PROFILE "online" CACHE STRING "Default profile. Supported profile selection: online, offline")
-set(DEFAULT_BASEMAP "Mapbox" CACHE STRING "Default basemap for online profile")
+set(DEFAULT_BASEMAP "MapTiler" CACHE STRING "Default basemap for online profile")
 set(DEFAULT_GEOCODER "photon" CACHE STRING "Default geocoder for online profile")
 set(DEFAULT_GUIDE "foursquare" CACHE STRING "Default guide for online profile")
 set(DEFAULT_ROUTER "stadiamaps" CACHE STRING "Default router for online profile")
-set(DEFAULT_FONTPROVIDER "mapbox" CACHE STRING "Default font provider. Supported: mapbox, osmscout")
+set(DEFAULT_FONTPROVIDER "maptiler" CACHE STRING "Default font provider. Supported: mapbox, maptiler, osmscout")
 
 # set project version used in About message
 if(NOT PM_VERSION)
@@ -51,6 +51,7 @@ endif()
 
 set(VALID_FONTPROVIDERS
     "mapbox"
+    "maptiler"
     "osmscout")
 
 if(NOT DEFAULT_FONTPROVIDER IN_LIST VALID_FONTPROVIDERS)
@@ -148,6 +149,10 @@ file(GLOB QML_DOCS qml/*.md qml/platform.*/*.md)
 file(GLOB PM_SRC src/*.cpp)
 file(GLOB PM_HEADERS src/*.h)
 
+file(GLOB GCLUE2_SRC src/geoclue2/*.cpp)
+file(GLOB GCLUE2_HEADERS src/geoclue2/*.h)
+file(GLOB GCLUE2_XML src/geoclue2/*.xml)
+
 # custom target for showing all sources in Qt Creator
 add_custom_target(Sources SOURCES
     ${GEOCODERS_SRC} ${GEOCODERS_EXTRA}
@@ -157,6 +162,7 @@ add_custom_target(Sources SOURCES
     ${POOR_SRC}
     ${QML_SRC} ${QML_JS} ${QML_PLATFORMS} ${QML_DOCS}
     ${PM_SRC} ${PM_HEADERS}
+    ${GCLUE2_SRC} ${GCLUE2_HEADERS} ${GCLUE2_XML}
     )
 
 # process linking and installation in the subdirs where needed

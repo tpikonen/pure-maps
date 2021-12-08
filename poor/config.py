@@ -26,7 +26,7 @@ import pyotherside
 
 __all__ = ("ConfigurationStore",)
 
-_default_basemap = "Mapbox"
+_default_basemap = "MapTiler"
 _default_geocoder = "photon"
 _default_guide = "foursquare"
 _default_router = "stadiamaps"
@@ -39,6 +39,7 @@ DEFAULTS = {
     "auto_rotate_when_navigating": True,
     "basemap_auto_light": "none",
     "basemap_auto_mode": True,
+    "basemap_fallback": "OpenTopoMap", # should work without any API keys or API keys are always added
     "basemap_lang": "local",
     "basemap_light": "",
     "basemap_type": "",
@@ -76,6 +77,7 @@ DEFAULTS = {
     "map_zoom_auto_time": 60.0,
     "map_zoom_auto_when_navigating": False,
     "map_zoom_auto_zero_speed_z": 16.0,
+    "navigation_horizontal_accuracy": 15.0,
     "poi_list_show_bookmarked": False,
     "profile": _default_profile,
     "profiles": {
@@ -96,6 +98,12 @@ DEFAULTS = {
             "geocoder": "osmscout",
             "guide": "osmscout",
             "router": "osmscout"
+        },
+        "HERE": {
+            "basemap": "HERE",
+            "geocoder": "here",
+            "guide": _default_guide,
+            "router": "here"
         }
      },
     "reroute": True,
@@ -227,6 +235,10 @@ class ConfigurationStore(poor.AttrDict):
     def register_keys(self, values):
         """Add configuration `values` for keys if missing."""
         self._register({"keys": values})
+
+    def register_licenses(self, values):
+        """Add configuration `values` for licenses if missing."""
+        self._register({"licenses": values})
 
     def register_guide(self, name, values):
         """Add configuration `values` for guide `name` if missing."""
