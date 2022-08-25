@@ -50,7 +50,7 @@ PagePL {
             visible: app.conf.profile === "offline"
             text: app.tr("You are using an offline profile. Make sure that you have OSM Scout Server installed " +
                          "and running. Depending on your system, it is available either in application stores " +
-                         "(OpenRepos for Sailfish OS, OpenStore for Ubuntu Touch), Flathub, or your distribution. " +
+                         "(Chum for Sailfish OS, OpenStore for Ubuntu Touch), Flathub, or your distribution. " +
                          'See <a href="https://rinigus.github.io/osmscout-server">OSM Scout Server manual</a> for ' +
                          "details.")
             textFormat: Text.StyledText
@@ -116,7 +116,7 @@ PagePL {
                 anchors.topMargin: styler.isSilica ? parent.top : undefined
                 anchors.verticalCenter: styler.isSilica ? undefined : label.verticalCenter
                 model: [ app.tr("Online"), app.tr("Offline"),
-                    hereAvailable ? app.tr("HERE - Online") : app.tr("HERE (disabled)"),
+                    hereAvailable ? app.tr("HERE - Online") : app.tr("HERE (disabled, API key missing)"),
                     app.tr("Mixed") ]
                 property var values: ["online", "offline", "HERE", "mixed"]
                 property bool hereAvailable: py.evaluate("poor.key.has_here")

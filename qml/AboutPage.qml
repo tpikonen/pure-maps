@@ -59,6 +59,14 @@ PagePL {
         }
 
         ListItemLabel {
+            height: styler.themeItemSizeExtraSmall
+            horizontalAlignment: Text.AlignHCenter
+            text: app.tr("This is a limited edition distributed through Jolla Store")
+            visible: programVariantJollaStore
+            wrapMode: Text.WordWrap
+        }
+
+        ListItemLabel {
             horizontalAlignment: Text.AlignHCenter
             text: app.tr('GitHub <a href="https://github.com/rinigus/pure-maps">project page</a>')
         }
@@ -78,7 +86,7 @@ PagePL {
                 font.pixelSize: styler.themeFontSizeSmall
                 height: implicitHeight
                 horizontalAlignment: Text.AlignRight
-                text: "2014–2018 Osmo Salomaa\n2018-2020 Rinigus"
+                text: "2014–2018 Osmo Salomaa\n2018-2022 Rinigus"
             }
 
             ListItemLabel {

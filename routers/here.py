@@ -46,6 +46,7 @@ CONF_DEFAULTS = {
     "avoid_tunnel": 0,
     "language": poor.util.get_default_language("en-US"),
     "shorter": 0,
+    "traffic": 1,
     "type": "car",
 }
 
@@ -118,6 +119,7 @@ def route(locations, params):
     lang = poor.conf.routers.here.language
     units = "metric" if poor.conf.units == "metric" else "imperial"
     transportMode = poor.conf.routers.here.type
+    traffic = poor.conf.routers.here.traffic
     routingMode = "short" if poor.conf.routers.here.shorter else "fast"
     origin = prepare_txtpoint(loc[0])
     destination = prepare_txtpoint(loc[-1])
@@ -137,13 +139,15 @@ def route(locations, params):
         avoid = "&avoid[features]=" + (",".join(avoid))
     else:
         avoid = ""
-
+    # skip cache if traffic update is expected
+    skip_cache = traffic and transportMode in (["car", "bus", "taxi"])
     url = URL.format(**locals()) + via + avoid
-    with poor.util.silent(KeyError):
-        return copy.deepcopy(cache[url])
+    if not traffic: url += "&departureTime=any"
+    if not skip_cache:
+        with poor.util.silent(KeyError):
+            return copy.deepcopy(cache[url])
     result = poor.http.get_json(url)
     result = poor.AttrDict(result)
-    #return result
     mode = MODE.get(transportMode,"car")
     return parse_result(url, locations, result, mode, lang, loc)
 
@@ -153,6 +157,7 @@ def parse_result(url, locations, result, mode, lang_translation, locations_proce
 
     X, Y, Man, LocPointInd = [], [], [], [0]
     location_candidates = []
+    traffic = 0
     for legs in result.routes[0].sections:
         x, y = [], []
         for p in poor.flexpolyline.decode(legs.polyline):
@@ -163,6 +168,7 @@ def parse_result(url, locations, result, mode, lang_translation, locations_proce
         language = legs.language
         transport_mode = legs.transport.mode
         maneuvers = []
+        traffic += legs.summary.duration - legs.summary.baseDuration
 
         if "preActions" in legs:
             for maneuver in legs.preActions:
@@ -250,10 +256,12 @@ def parse_result(url, locations, result, mode, lang_translation, locations_proce
         print("Data:", locations_processed, location_candidates, LocPointInd)
         return dict()
 
+    if traffic < 1: traffic = 0
     route = dict(x=X, y=Y,
                  locations=locations,
                  location_indexes=LocPointInd,
                  maneuvers=Man, mode=mode)
+    if traffic > 0.1: route["traffic"]=traffic
     route["language"] = result.routes[0].sections[0].language.replace("-","_")
     if route and route["x"]:
         cache[url] = copy.deepcopy(route)
