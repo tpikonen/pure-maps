@@ -13,6 +13,8 @@ endif()
 
 add_compile_options(
     -DAPP_NAME="${APP_NAME}"
+    -DAPP_REV_NAME="${APP_REV_NAME}"
+    -DAPP_ORG="${APP_ORG}"
     -DAPP_VERSION="${PM_VERSION}"
     -DDEFAULT_DATA_PREFIX="${DATADIR_RUNNING}/"
     -DDEFAULT_FONTPROVIDER="${DEFAULT_FONTPROVIDER}"
@@ -22,6 +24,12 @@ if(CMAKE_BUILD_TYPE STREQUAL "release")
     add_definitions(
         -QT_NO_WARNING_OUTPUT
         -QT_NO_DEBUG_OUTPUT)
+endif()
+
+if (APP_VARIANT_JOLLA_STORE)
+   add_compile_options(
+       -DAPP_VARIANT_JOLLA_STORE
+       )
 endif()
 
 if(S2INCLUDES)

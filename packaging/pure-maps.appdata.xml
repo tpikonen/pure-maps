@@ -38,6 +38,42 @@
  </screenshots>
  <metadata_license>CC-BY-SA-3.0</metadata_license>
  <releases>
+   <release  version="3.1.1" date="2022-08-21">
+     <description>
+       <ul>
+         <li>Adjust route width</li>
+         <li>[kirigami] Workaround Kirigami scrollable page bugs</li>
+         <li>Update translations</li>
+       </ul>
+     </description>
+   </release>
+   <release  version="3.1.0" date="2022-05-01">
+     <description>
+       <ul>
+         <li>Redesign no-signal and low-signal icons [eLtMosen]</li>
+         <li>Reduce basemap icons size [eLtMosen]</li>
+         <li>Improve cmake build scripts</li>
+         <li>[sfos] Distinguish between Chum and Jolla Store versions and warn users of limitations</li>
+         <li>[sfos] SailJail permissions for Jolla Store version</li>
+         <li>[ubuntu touch] Use MapLibre in Ubuntu packaging [jonnius]</li>
+         <li>Update translations</li>
+       </ul>
+     </description>
+   </release>
+   <release  version="3.0.0" date="2022-03-16">
+     <description>
+       <ul>
+         <li>Switch over to Maplibre Native GL based plugin</li>
+         <li>Show traffic impact on route</li>
+         <li>Update route traffic info while routing</li>
+         <li>Switch to SVG based map icons</li>
+         <li>Notify the changes in positioning precision during navigation</li>
+         <li>Update build scripts [pabloyoyoista]</li>
+         <li>Update Ubuntu Touch build scripts [jonnius]</li>
+         <li>Update translations</li>
+       </ul>
+     </description>
+   </release>
    <release  version="2.9.0" date="2021-11-22">
      <description>
        <ul>

@@ -32,8 +32,10 @@ Navigator::Navigator(QObject *parent) :
   setupTranslator();
   clearRoute();
   m_timer.setInterval(60000); // 1 minute
+  m_timer.setInterval(1000);
 
   connect(&m_timer, &QTimer::timeout, this, &Navigator::updateEta);
+  connect(&m_timer, &QTimer::timeout, this, &Navigator::updateTraffic);
   connect(this, &Navigator::languageChanged, this, &Navigator::setupTranslator);
 
   connect(&m_locations_model, &LocationModel::locationArrived, this, &Navigator::locationArrived);
@@ -144,7 +146,7 @@ void Navigator::setOptimized(bool opt)
 
 void Navigator::setPosition(const QGeoCoordinate &c, double direction, double horizontalAccuracy, bool valid)
 {
-  if (!m_index || !valid || horizontalAccuracy > 100)
+  if (!m_index || !valid || horizontalAccuracy > std::max(100.0, 3*m_horizontalAccuracy))
     {
       if (m_running)
         {
@@ -152,16 +154,9 @@ void Navigator::setPosition(const QGeoCoordinate &c, double direction, double ho
             qCritical() << "Programming error: called setPosition without route";
 
           else if (!valid)
-            {
-              SET(icon, QLatin1String("position-unknown-no-signal"));
-              SET(narrative, trans("Position unknown"));
-            }
-
+              setPrecision(PrecisionStateNone, horizontalAccuracy);
           else
-            {
-              SET(icon, QLatin1String("position-unknown-low-signal"));
-              SET(narrative, trans("Position imprecise: accuracy %1").arg(distanceToStr(horizontalAccuracy)));
-            }
+              setPrecision(PrecisionStateLow, horizontalAccuracy);
 
           SET(directionValid, false);
           SET(manDist, QLatin1String("-"));
@@ -169,18 +164,12 @@ void Navigator::setPosition(const QGeoCoordinate &c, double direction, double ho
           SET(roundaboutExit, 0);
           SET(sign, QVariantMap());
           SET(street, QLatin1String());
-          m_precision_insufficient = true;
         }
 
       return;
     }
 
-  // cleanup precision messages when the first good coordinate goes through
-  if (m_precision_insufficient)
-    {
-      m_precision_insufficient = false;
-      SET(narrative, trans("Preparing to start navigation"));
-    }
+  setPrecision(PrecisionStatePrecise, horizontalAccuracy);
 
   double accuracy_rad = S2Earth::MetersToRadians(std::max(horizontalAccuracy, m_horizontalAccuracy));
   S1ChordAngle accuracy = S1ChordAngle::Radians(accuracy_rad);
@@ -509,6 +498,38 @@ void Navigator::setPosition(const QGeoCoordinate &c, double direction, double ho
   //qDebug() << "Exit setPosition";
 }
 
+void Navigator::setPrecision(Navigator::PrecisionState state, double horizontalAccuracy)
+{
+  if (state == m_precision) return;
+
+  if (m_running &&
+      state != PrecisionStateUnknown)
+    {
+      bool with_prompt = (m_precision != PrecisionStateUnknown);
+      // precision of location changed during navigation and
+      // we have to notify about it via voice prompt
+      if (state == PrecisionStateLow)
+        {
+          SET(icon, QLatin1String("position-unknown-low-signal"));
+          SET(narrative, trans("Position imprecise: accuracy %1").arg(distanceToStr(horizontalAccuracy)));
+          if (with_prompt) prompt(QStringLiteral("std:precision low"));
+        }
+      else if (state == PrecisionStateNone)
+        {
+          SET(icon, QLatin1String("position-unknown-no-signal"));
+          SET(narrative, trans("Position unknown"));
+          if (with_prompt) prompt(QStringLiteral("std:precision none"));
+        }
+      else if (state == PrecisionStatePrecise)
+        {
+          SET(narrative, trans("Preparing to start navigation"));
+          if (with_prompt) prompt(QStringLiteral("std:precision precise"));
+        }
+    }
+
+  m_precision = state;
+}
+
 void Navigator::setRoute(QVariantMap m)
 {
   const double accuracy_m = 5;
@@ -533,6 +554,7 @@ void Navigator::setRoute(QVariantMap m)
   m_prompts.clear();
   m_reroute_request.start();
   m_last_accuracy = -1;
+  setPrecision(PrecisionStateUnknown);
 
   // clear traveled distance and locations only if not running
   // that will keep progress intact on rerouting
@@ -885,9 +907,14 @@ void Navigator::setRoute(QVariantMap m)
 
   // global vars
   m_route_duration = duration_on_route;
+  m_route_duration_traffic = m.value("traffic", 0).toInt();
+  m_traffic_updated.restart();
 
   SET(totalDist, distanceToStr(m_route_length_m));
   SET(totalTime, timeToStr(m_route_duration));
+  SET(totalTimeInTraffic, timeToStr(m_route_duration_traffic));
+  SET(hasTraffic, m.contains("traffic"));
+
   m_maneuvers_model.setManeuvers(m_maneuvers);
 
   emit routeChanged();
@@ -896,6 +923,7 @@ void Navigator::setRoute(QVariantMap m)
 
 void Navigator::setRunning(bool r)
 {
+  setPrecision(PrecisionStateUnknown);
   if (!m_index && r)
     {
       qWarning() << "Navigator: Cannot start routing without route. Fix the caller.";
@@ -906,6 +934,12 @@ void Navigator::setRunning(bool r)
   else m_timer.stop();
 
   emit runningChanged();
+}
+
+void Navigator::setTrafficRerouteTime(int t)
+{
+  m_trafficRerouteTime = t;
+  emit trafficRerouteTimeChanged();
 }
 
 void Navigator::setUnits(QString u)
@@ -932,6 +966,13 @@ void Navigator::updateProgress()
     p = m_distance_traveled_m / std::max(1.0, m_distance_traveled_m +
                                          m_route_length_m - m_last_distance_along_route_m);
   SET(progress, (int)round(100*p));
+}
+
+void Navigator::updateTraffic()
+{
+  if (!m_running || !m_hasTraffic || m_trafficRerouteTime <= 0) return;
+  if (m_traffic_updated.elapsed() / 1000 < m_trafficRerouteTime /* in seconds */) return;
+  emit rerouteRequest(true);
 }
 
 // Translations and string functions
@@ -1004,8 +1045,9 @@ QString Navigator::timeToStr(double seconds) const
   int minutes = round((seconds - hours*3600)/60);
   // TRANSLATORS: Keep %1 and %2 as they are, will be replaced with numerical hours (%1) and minutes (%2)
   return hours > 0 ? trans("%1 h %2 min").arg(hours).arg(minutes) :
+                     minutes > 0 ?
                      // TRANSLATORS: Keep %1 as it is, it will be replaced with numerical minutes (%1)
-                     trans("%1 min").arg(minutes);
+                     trans("%1 min").arg(minutes) : QString();
 }
 
 double Navigator::distanceRounded(double meters) const
@@ -1054,6 +1096,10 @@ void Navigator::prepareStandardPrompts()
   m_std_prompts.insert(QLatin1String("std:new route found"), trans("New route found"));
   m_std_prompts.insert(QLatin1String("std:rerouting"), trans("Rerouting"));
   m_std_prompts.insert(QLatin1String("std:routing failed"), trans("Routing failed"));
+  m_std_prompts.insert(QLatin1String("std:traffic updated"), trans("Traffic and route updated"));
+  m_std_prompts.insert(QLatin1String("std:precision low"), trans("Position imprecise"));
+  m_std_prompts.insert(QLatin1String("std:precision none"), trans("Position unknown"));
+  m_std_prompts.insert(QLatin1String("std:precision precise"), trans("Position available"));
 
   // first prompt that is needed, can request multiple times
   emit promptPrepare(m_std_prompts["std:starting navigation"], true);

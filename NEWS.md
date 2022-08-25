@@ -1,3 +1,28 @@
+2022-05-01: Pure Maps 3.1.0
+===========================
+
+* Redesign no-signal and low-signal icons [eLtMosen]
+* Reduce basemap icons size [eLtMosen]
+* Improve cmake build scripts
+* Update translations
+* [sfos] Distinguish between Chum and Jolla Store versions and warn users of limitations
+* [sfos] SailJail permissions for Jolla Store version
+* [ubuntu touch] Use MapLibre in Ubuntu packaging [jonnius]
+* [3.1.1] Adjust route width
+* [3.1.1, kirigami] Workaround Kirigami scrollable page bugs
+
+
+2022-03-16: Pure Maps 3.0.0
+============================
+
+* Switch over to Maplibre Native GL based plugin
+* Show traffic impact on route
+* Update route traffic info while routing
+* Switch to SVG based map icons
+* Notify the changes in positioning precision during navigation
+* Update build scripts [pabloyoyoista]
+* Update Ubuntu Touch build scripts [jonnius]
+
 2021-11-22: Pure Maps 2.9.0
 ===========================
 
@@ -16,6 +41,8 @@
 * Revise API keys handling
 * Update translations
 * Bugfixes
+* [2.9.2, sfos] Add Chum section to SPEC
+* [2.9.2, sfos] Fix My Backup configuration [Karry]
 
 2021-10-17: Pure Maps 2.8.0
 ===========================

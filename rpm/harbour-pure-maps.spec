@@ -9,7 +9,7 @@
 %if 0%{?sailfishos}
 # "Harbour RPM packages should not provide anything."
 %define __provides_exclude_from ^%{_datadir}/.*$
-%define __requires_exclude ^libs2|libqmapboxgl.*$
+%define __requires_exclude ^libs2|libQMapboxGL.*$
 %endif
 
 %if 0%{?sailfishos}
@@ -18,7 +18,7 @@ Name: harbour-pure-maps
 Name: pure-maps
 %endif
 
-Version: 2.9.1
+Version: 3.1.1
 Release: 1
 
 Summary: Maps and navigation
@@ -42,9 +42,9 @@ BuildRequires: s2geometry-devel
 BuildRequires: cmake
 
 %if !0%{?jollastore}
-Requires: mapboxgl-qml >= 1.7.0
+Requires: mapboxgl-qml >= 2.0.0
 %else
-BuildRequires: mapboxgl-qml >= 1.7.0
+BuildRequires: mapboxgl-qml >= 2.0.0
 %endif
 
 %if 0%{?sailfishos}
@@ -69,8 +69,25 @@ Requires: dbus-tools
 %endif
 
 %description
-View maps, find places and routes, navigate with turn-by-turn instructions,
-search for nearby places by type and share your location.
+Pure Maps is a full-featured map and navigation application allowing
+you to explore maps, search for addresses and points of interest, as
+well as assist with navigation. For that, it uses online or offline
+service providers.
+
+PackageName: Pure Maps
+Type: desktop-application
+Categories:
+  - Maps
+  - Science
+Custom:
+  Repo: https://github.com/rinigus/pure-maps
+Icon: https://raw.githubusercontent.com/rinigus/pure-maps/master/data/pure-maps.svg
+Screenshots:
+  - https://raw.githubusercontent.com/rinigus/pure-maps/master/screenshots/main.png
+  - https://raw.githubusercontent.com/rinigus/pure-maps/master/screenshots/menu_sfos.png
+  - https://raw.githubusercontent.com/rinigus/pure-maps/master/screenshots/traffic.png
+Url:
+  Donation: https://rinigus.github.io/donate
 
 %prep
 %setup -q
@@ -92,10 +109,12 @@ cmake \
     -DCMAKE_INSTALL_RPATH=%{_datadir}/%{name}/lib: \
     -DCMAKE_VERBOSE_MAKEFILE=ON \
     -DPM_VERSION='%{version}-%{release}' \
+    -DAPP_ORG="io.github.rinigus" \
     -DFLAVOR=silica \
     -DUSE_BUNDLED_GPXPY=ON \
 %if 0%{?jollastore}
     -DQML_IMPORT_PATH=\"%{_datadir}/%{name}/lib/qml\" \
+    -DAPP_VARIANT_JOLLA_STORE=ON \
 %endif
     -DPYTHON_EXE=python3 ..
 %else
@@ -122,9 +141,8 @@ cp %{_libdir}/libs2.so %{buildroot}%{_datadir}/%{name}/lib
 %if 0%{?jollastore}
 mkdir -p %{buildroot}%{_datadir}/%{name}/lib/qml/MapboxMap
 cp %{_libdir}/qt5/qml/MapboxMap/* %{buildroot}%{_datadir}/%{name}/lib/qml/MapboxMap
-cp %{_libdir}/libqmapboxgl.so.1* %{buildroot}%{_datadir}/%{name}/lib
+cp %{_libdir}/libQMapboxGL.so.2* %{buildroot}%{_datadir}/%{name}/lib
 sed -i 's/QtPositioning 5.3/QtPositioning 5.4/g' %{buildroot}%{_datadir}/%{name}/lib/qml/MapboxMap/MapboxMapGestureArea.qml
-sed -i 's/X-Nemo-Application-Type=silica-qt5/X-Nemo-Application-Type=no-invoker/g' %{buildroot}%{_datadir}/applications/%{name}.desktop
 %endif
 
 # strip executable bit from all libraries
@@ -133,11 +151,7 @@ chmod -x %{buildroot}%{_datadir}/%{name}/lib/*.so*
 chmod -x %{buildroot}%{_datadir}/%{name}/lib/qml/MapboxMap/*.so*
 %endif
 
-%endif # sailfishos
-
-%if 0%{?jollastore}
-# remove not allowed desktop handler
-rm %{buildroot}%{_datadir}/applications/harbour-pure-maps-uri-handler.desktop || true
+# sailfishos
 %endif
 
 %files

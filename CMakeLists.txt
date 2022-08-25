@@ -1,12 +1,15 @@
 cmake_minimum_required(VERSION 3.5.1) # Latest version as supported by Ubuntu Touch
 
 project(pure-maps
-    VERSION 2.9.1
+    VERSION 3.1.1
     DESCRIPTION "Maps and navigation")
 
 # options
 set(APP_NAME "" CACHE STRING "Name of the application, specify if custom name is needed")
+set(APP_REV_NAME "" CACHE STRING "Name of the application used for data files, specify if custom name is needed")
+set(APP_ORG "" CACHE STRING "Name of the organization, specify if different from APP_NAME")
 set(FLAVOR "kirigami" CACHE STRING "Platform to build support for. Supported platforms: kirigami, silica, qtcontrols, uuitk")
+option(APP_VARIANT_JOLLA_STORE "Set if compiling for Sailfish Jolla Store" OFF)
 set(PYTHON_EXE "auto" CACHE STRING "Set python3 executable. If set to 'auto', cmake will try to find it.")
 option(RUN_FROM_SOURCE "Run from source, this is mainly intended for easy development" OFF)
 set(S2INCLUDES "" CACHE STRING "Custom installed location for s2geometry, includes")
@@ -65,7 +68,20 @@ if(NOT APP_NAME)
         set(APP_NAME harbour-pure-maps)
     else()
         set(APP_NAME pure-maps)
+	set(APP_REV_NAME io.github.rinigus.PureMaps)
     endif()
+endif()
+
+if(NOT APP_REV_NAME)
+    if(FLAVOR STREQUAL "silica")
+        set(APP_REV_NAME harbour-pure-maps)
+    else()
+	set(APP_REV_NAME io.github.rinigus.PureMaps)
+    endif()
+endif()
+
+if(NOT APP_ORG)
+    set(APP_ORG ${APP_NAME})
 endif()
 
 # requirements
@@ -175,28 +191,37 @@ add_subdirectory(po)
 # appdata
 install(FILES packaging/pure-maps.appdata.xml
     DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/metainfo
-    RENAME ${APP_NAME}.appdata.xml)
+    RENAME ${APP_REV_NAME}.appdata.xml)
 
 # desktop files
 if(NOT FLAVOR STREQUAL "silica")
-    configure_file(data/pure-maps.desktop.in ${APP_NAME}.desktop @ONLY)
+    configure_file(data/pure-maps.desktop.in ${APP_REV_NAME}.desktop @ONLY)
     configure_file(data/pure-maps-uri-handler.desktop.in ${APP_NAME}-uri-handler.desktop @ONLY)
     set(DESKTOP_SRC
-        ${CMAKE_CURRENT_BINARY_DIR}/${APP_NAME}.desktop
+        ${CMAKE_CURRENT_BINARY_DIR}/${APP_REV_NAME}.desktop
         ${CMAKE_CURRENT_BINARY_DIR}/${APP_NAME}-uri-handler.desktop)
 else()
-    set(DESKTOP_SRC
-        data/${APP_NAME}.desktop
-        data/${APP_NAME}-uri-handler.desktop)
+    # SFOS
+    if (APP_VARIANT_JOLLA_STORE)
+      install(FILES data/harbour-pure-maps-jolla-store.desktop
+	DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications
+	RENAME harbour-pure-maps.desktop)
+    else()
+      set(DESKTOP_SRC
+          data/${APP_REV_NAME}.desktop
+          data/${APP_NAME}-uri-handler.desktop)
+    endif()
 endif()
 
-install(FILES ${DESKTOP_SRC}
+if (NOT APP_VARIANT_JOLLA_STORE)
+  install(FILES ${DESKTOP_SRC}
     DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
+endif()
 
 # icons
 set(ICON_SIZES 108 128 256 86)
 foreach(_ISIZE ${ICON_SIZES})
-    install(FILES data/pure-maps-${_ISIZE}.png RENAME ${APP_NAME}.png
+    install(FILES data/pure-maps-${_ISIZE}.png RENAME ${APP_REV_NAME}.png
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/${_ISIZE}x${_ISIZE}/apps)
 endforeach()
 

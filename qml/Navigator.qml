@@ -36,6 +36,7 @@ Item {
     property bool   hasNextLocation: nextLocationDist
     property bool   hasOrigin: locationsModel.hasOrigin
     property bool   hasRoute:  navigatorBase.route.length > 0
+    property bool   hasTraffic: navigatorBase.hasTraffic
     property alias  icon:      navigatorBase.icon
     property alias  locations: navigatorBase.locations
     property alias  locationsModel: navigatorBase.locationsModel
@@ -56,7 +57,6 @@ Item {
     property int    rerouteConsecutiveErrors: 0
     property int    rerouteConsecutiveIgnored: 0
     property real   reroutePreviousTime: -1
-    property int    rerouteTotalCalls: 0
     property bool   routing: false
     property alias  roundaboutExit: navigatorBase.roundaboutExit
     property alias  route:     navigatorBase.route
@@ -65,11 +65,13 @@ Item {
     property alias  street:    navigatorBase.street
     property alias  totalDist: navigatorBase.totalDist
     property alias  totalTime: navigatorBase.totalTime
+    property alias  totalTimeInTraffic: navigatorBase.totalTimeInTraffic
     property alias  transportMode: navigatorBase.mode
 
     NavigatorBase {
         id: navigatorBase
         horizontalAccuracy: app.conf.navigationHorizontalAccuracy
+        trafficRerouteTime: app.conf.trafficRerouteTime
         units: app.conf.units
 
         property bool voicePrepared: false
@@ -100,7 +102,27 @@ Item {
             voice.prepare(text, preserve)
         }
 
-        onRerouteRequest: rerouteMaybe()
+        onRerouteRequest: {
+            // Find a new route if conditions are met.
+            if (!app.conf.reroute) return;
+            if (app.mode !== modes.navigate) return;
+            if (!gps.horizontalAccuracyValid || !gps.ready) return;
+            if (gps.horizontalAccuracy > 100) return;
+            if (!py.evaluate("poor.app.router.can_reroute")) return;
+            if (hasBeenAlongRoute) rerouteConsecutiveIgnored = 0;
+            var interval = 5000*Math.pow(2, Math.min(4, rerouteConsecutiveErrors + rerouteConsecutiveIgnored));
+            if (py.evaluate("poor.app.router.offline")) {
+                if (Date.now() - reroutePreviousTime < interval) return;
+                return reroute();
+            } else {
+                // Limit the total amount and frequency of rerouting for online routers
+                // to avoid an excessive amount of API calls (causing data traffic and
+                // costs) in some special case where the router returns bogus results
+                // and the user is not able to manually intervene.
+                if (Date.now() - reroutePreviousTime < interval) return;
+                return reroute(traffic);
+            }
+        }
 
         onAlongRouteChanged: {
             if (!hasBeenAlongRoute && alongRoute) hasBeenAlongRoute = true;
@@ -117,7 +139,6 @@ Item {
                 rerouteConsecutiveErrors = 0;
                 rerouteConsecutiveIgnored = 0;
                 reroutePreviousTime = -1;
-                rerouteTotalCalls = 0;
                 hasBeenAlongRoute = alongRoute;
                 updatePosition();
             }
@@ -174,7 +195,7 @@ Item {
         saveRoute({});
     }
 
-    function findRoute(locations, options) {
+    function findRoute(locations, options, traffic) {
         if (routing) return;
         if (!options) options = {};
         options.optimized = navigatorBase.optimized;
@@ -213,9 +234,10 @@ Item {
                 rerouteConsecutiveErrors++;
             } else if (route && route.x && route.x.length > 0) {
                 app.notification.flash(navigatorBase.running ?
-                                           app.tr("New route found") :
+                                           (traffic ? app.tr("Traffic and route updated") : app.tr("New route found")) :
                                            app.tr("Route found"), notifyId);
-                if (options.voicePrompt) navigatorBase.prompt("std:new route found");
+                if (options.voicePrompt) navigatorBase.prompt(traffic ? "std:traffic updated" :
+                                                                        "std:new route found");
                 setRoute(route);
                 rerouteConsecutiveErrors = 0;
                 if (options.fitToView) map.fitViewToRoute();
@@ -247,42 +269,20 @@ Item {
         return true;
     }
 
-    function reroute() {
+    function reroute(traffic) {
         // Find a new route from the current position to the existing destination.
         if (routing) return;
-        navigatorBase.prompt("std:rerouting");
+        if (!traffic) navigatorBase.prompt("std:rerouting");
         if (!hasBeenAlongRoute) rerouteConsecutiveIgnored++;
         hasBeenAlongRoute = false;
         var loc = navigatorBase.locations.slice(1);
-        findRoute(loc,
-                  {   "heading": gps.direction,
-                      "notification": app.tr("Rerouting"),
-                      "voicePrompt": true } );
-        reroutePreviousTime = Date.now();
-        rerouteTotalCalls++;
-    }
-
-    function rerouteMaybe() {
-        // Find a new route if conditions are met.
-        if (!app.conf.reroute) return;
-        if (app.mode !== modes.navigate) return;
-        if (!gps.horizontalAccuracyValid || !gps.ready) return;
-        if (gps.horizontalAccuracy > 100) return;
-        if (!py.evaluate("poor.app.router.can_reroute")) return;
-        if (hasBeenAlongRoute) rerouteConsecutiveIgnored = 0;
-        var interval = 5000*Math.pow(2, Math.min(4, rerouteConsecutiveErrors + rerouteConsecutiveIgnored));
-        if (py.evaluate("poor.app.router.offline")) {
-            if (Date.now() - reroutePreviousTime < interval) return;
-            return reroute();
-        } else {
-            // Limit the total amount and frequency of rerouting for online routers
-            // to avoid an excessive amount of API calls (causing data traffic and
-            // costs) in some special case where the router returns bogus results
-            // and the user is not able to manually intervene.
-            if (rerouteTotalCalls > 50) return;
-            if (Date.now() - reroutePreviousTime < interval) return;
-            return reroute();
+        var options = {
+            "heading": gps.direction,
+            "notification": traffic ? app.tr("Updating traffic"): app.tr("Rerouting"),
+            "voicePrompt": true
         }
+        findRoute(loc, options, traffic);
+        reroutePreviousTime = Date.now();
     }
 
     function saveDestination() {
