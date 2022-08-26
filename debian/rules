@@ -11,6 +11,7 @@ override_dh_auto_configure:
 
 override_dh_clean:
 	find ./ -name '__pycache__' | xargs rm -rf
+	rm -f qml/platform
 	dh_clean
 
 #override_dh_installdocs:
