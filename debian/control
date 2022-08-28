@@ -19,6 +19,7 @@ Homepage: https://github.com/rinigus/pure-maps
 Package: pure-maps
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends},
+ mapbox-gl-qml (> 2.0),
  qml-module-org-kde-kirigami2,
  qml-module-io-thp-pyotherside,
  qml-module-qtmultimedia,
