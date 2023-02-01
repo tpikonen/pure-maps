@@ -1,11 +1,17 @@
-pure-maps (3.1.1-2) UNRELEASED; urgency=medium
+pure-maps (3.2.0-1) UNRELEASED; urgency=medium
+
+  * New upstream release
+
+ -- Teemu Ikonen <tpikonen@gmail.com>  Wed, 01 Feb 2023 21:45:30 +0200
+
+pure-maps (3.1.1-2) experimental; urgency=medium
 
   * Packaging updates
 
   [ Teemu Ikonen ]
   * New upstream release
 
- -- Sebastian Spaeth <Sebastian@SSpaeth.de>  Thu, 27 Oct 2022 18:43:10 +0200
+ -- Teemu Ikonen <tpikonen@gmail.com>  Wed, 01 Feb 2023 21:45:02 +0200
 
 pure-maps (2.9.1-1) experimental; urgency=medium
 
