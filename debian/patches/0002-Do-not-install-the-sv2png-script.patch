@@ -1,4 +1,3 @@
-From 79379633d478def4493d6db87a5c08e22facff74 Mon Sep 17 00:00:00 2001
 From: Sebastian Spaeth <Sebastian@SSpaeth.de>
 Date: Thu, 27 Oct 2022 19:52:11 +0200
 Subject: [PATCH] Do not install the sv2png script
@@ -10,7 +9,7 @@ correctly complains about a binary in such a location.
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/qml/CMakeLists.txt b/qml/CMakeLists.txt
-index 2e47657c..239f637a 100644
+index 2e47657..239f637 100644
 --- a/qml/CMakeLists.txt
 +++ b/qml/CMakeLists.txt
 @@ -1,6 +1,7 @@
@@ -22,6 +21,3 @@ index 2e47657c..239f637a 100644
  
  # We can't just install entire directories, as the kirigami flavor includes symlinked files
  # To remedy this we dereference them first
--- 
-2.37.2
-

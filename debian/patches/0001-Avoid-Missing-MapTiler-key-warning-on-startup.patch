@@ -2,17 +2,16 @@ From: Teemu Ikonen <tpikonen@mailbox.org>
 Date: Fri, 1 Oct 2021 11:08:42 +0300
 Subject: Avoid 'Missing MapTiler key' warning on startup
 
-Replace MapTiler with OpenTopoMap as default map and osmscout as default
-font provider.
+Replace MapTiler with OpenTopoMap as default map.
 ---
- CMakeLists.txt | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 45d4667..ebae0b9 100644
+index d8a5775..f41b37b 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -17,11 +17,11 @@ option(USE_BUNDLED_GEOCLUE2 "Use a bundled version of Geoclue2 Qt plugin with bu
+@@ -20,7 +20,7 @@ option(USE_BUNDLED_GEOCLUE2 "Use a bundled version of Geoclue2 Qt plugin with bu
  set(QML_IMPORT_PATH "" CACHE STRING "Additional QML import path")
  
  set(DEFAULT_PROFILE "online" CACHE STRING "Default profile. Supported profile selection: online, offline")
@@ -21,8 +20,3 @@ index 45d4667..ebae0b9 100644
  set(DEFAULT_GEOCODER "photon" CACHE STRING "Default geocoder for online profile")
  set(DEFAULT_GUIDE "foursquare" CACHE STRING "Default guide for online profile")
  set(DEFAULT_ROUTER "stadiamaps" CACHE STRING "Default router for online profile")
--set(DEFAULT_FONTPROVIDER "maptiler" CACHE STRING "Default font provider. Supported: mapbox, maptiler, osmscout")
-+set(DEFAULT_FONTPROVIDER "osmscout" CACHE STRING "Default font provider. Supported: mapbox, maptiler, osmscout")
- 
- # set project version used in About message
- if(NOT PM_VERSION)
