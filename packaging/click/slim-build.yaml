@@ -1,8 +1,9 @@
-clickable_minimum_required: 7.0.1
+clickable_minimum_required: 7.8.0
 
 scripts:
   prepare-deps: git submodule update --recursive --init && ENABLE_MIMIC=0 ${ROOT}/packaging/click/prepare-deps.sh
 
+framework: ubuntu-sdk-20.04
 kill: pure-maps
 
 builder: cmake
@@ -17,15 +18,11 @@ postbuild:
 - sed -i 's/@APP_TITLE@/Pure Maps Slim/g' ${INSTALL_DIR}/manifest.json
 - sed -i 's/@APP_NAME@/pure-maps-slim/g'  ${INSTALL_DIR}/manifest.json
 - mv ${INSTALL_DIR}/bin/pure-maps-slim.jonnius ${CLICK_PATH}/pure-maps
-dependencies_ppa:
-- ppa:janisozaur/cmake-update
-dependencies_host:
-- cmake
 
 install_qml:
 - ${MAPBOX_GL_QML_LIB_INSTALL_DIR}/usr/lib/${ARCH_TRIPLET}/qt5/qml/MapboxMap
 install_lib:
-- ${MAPLIBRE_GL_NATIVE_LIB_INSTALL_DIR}/lib/libQMapboxGL.so*
+- ${MAPLIBRE_GL_NATIVE_LIB_INSTALL_DIR}/lib/libQMapLibreGL.so*
 - ${S2GEOMETRY_LIB_INSTALL_DIR}/lib/*.so*
 install_bin:
 - ${PICOTTS_LIB_INSTALL_DIR}/usr/bin/pico2wave
@@ -47,33 +44,10 @@ libraries:
     - -DMBGL_QT_LIBRARY_ONLY=ON
     - -DMBGL_QT_STATIC=OFF
 
-    image_setup:
-      run:
-      - ln -s android-23 /usr/include/android
-      - wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
-      - apt-add-repository "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-12 main"
-      - apt-get update
-      - apt-get install -y clang-12 lld-12
-      - update-alternatives --install /usr/bin/cc cc /usr/bin/clang-12 60
-      - update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++-12 60
-      - mkdir /opt/cmake
-      - wget https://github.com/Kitware/CMake/releases/download/v3.22.3/cmake-3.22.3-linux-x86_64.sh -O cmake-installer.sh
-      - sh cmake-installer.sh --skip-license --prefix=/opt/cmake
-      - rm cmake-installer.sh
-      env:
-        CC: clang-12
-        CXX: clang++-12
-        PATH: /opt/cmake/bin:$PATH
-
   mapbox-gl-qml:
     builder: cmake
     build_args:
     - -DCMAKE_CXX_STANDARD=14
-
-    dependencies_ppa:
-    - ppa:janisozaur/cmake-update
-    dependencies_host:
-    - cmake
 
   s2geometry:
     builder: cmake
@@ -82,10 +56,6 @@ libraries:
     - -DBUILD_TESTING=OFF
     - -DBUILD_SHARED_LIBS=ON
     - -DBUILD_EXAMPLES=OFF
-    dependencies_ppa:
-    - ppa:janisozaur/cmake-update
-    dependencies_host:
-    - cmake
     dependencies_target:
     - swig
     - libpython3-dev

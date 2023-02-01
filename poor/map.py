@@ -31,6 +31,10 @@ class Map:
 
     """Map data and style source."""
 
+    KEY_INT = "int"
+    KEY_LOCAL = "local"
+    KEY_MAP_DEFAULT = "map default"
+
     def __new__(cls, id, values=None):
         """Return possibly existing instance for `id`."""
         if not hasattr(cls, "_instances"):
@@ -52,7 +56,7 @@ class Map:
         self.format = values["format"]
         self.keys = values.get("keys", [])
         self.fingerprint = values.get("fingerprint", {})
-        self.lang = values.get("lang", "local")
+        self.lang = values.get("lang", Map.KEY_LOCAL)
         self.lang_key = values.get("lang_key", None)
         self.light = values.get("light", "day")
         self.logo = values.get("logo", "default")
@@ -88,8 +92,9 @@ class Map:
     def complies(self, lang="", light="", type="", vehicle=""):
         """Return True if the applied restrictions are met"""
         return \
-            (lang=='' or ((isinstance(self.lang, str) and lang==self.lang) or \
-                          (isinstance(self.lang, dict) and lang in self.lang))) and \
+            (lang=='' or lang==Map.KEY_MAP_DEFAULT or \
+                   ((isinstance(self.lang, str) and lang==self.lang) or \
+                   (isinstance(self.lang, dict) and lang in self.lang))) and \
             (light=='' or light==self.light) and \
             (type=='' or type==self.type or (type=="preview" and self.type=="traffic")) and \
             (vehicle=='' or self.vehicle==vehicle)
@@ -102,21 +107,68 @@ class Map:
             path = os.path.join(poor.DATA_DIR, leaf)
         return poor.util.read_json(path)
 
+    def _process_style_json(self, element, replacement):
+        """Used to process style object recursively"""
+        if isinstance(element, dict):
+            return {k: self._process_style_json(v, replacement) for k,v in element.items()}
+        if isinstance(element, list) and element == ["get", self.lang_key]:
+            return replacement
+        if isinstance(element, list):
+            return [self._process_style_json(e, replacement) for e in element]
+        if isinstance(element, str):
+            if element == "{" + self.lang_key + "}":
+                return replacement
+        return element
+
     def process_style(self, style, lang=None):
         if self.format != "mapbox-gl":
             return None
         if self.style_json_orig is None and (style is None or len(style)==0):
             return None
+
         if isinstance(style, str) and self.style_json_processed != style:
-            import json
             sj = json.loads(style)
             for k,v in self.fingerprint.items():
                 if k not in sj or v != sj[k]:
+                    print('Style has unexpected fingerprint') 
                     return None
             self.style_json_orig = style
-        if not isinstance(self.lang, dict) or self.lang_key is None or lang not in self.lang:
+
+        if lang == Map.KEY_MAP_DEFAULT:
+            return self.style_json_orig
+
+        if not isinstance(self.lang, dict) or \
+           self.lang_key is None or \
+           lang not in self.lang or \
+           Map.KEY_LOCAL not in self.lang or \
+           Map.KEY_INT not in self.lang or \
+           self.lang_key == self.lang[lang]:
             return None
-        self.style_json_processed = self.style_json_orig.replace(self.lang_key, self.lang[lang])
+
+        if self.lang_key[0] == "{" and self.lang_key[-1] == "}":
+            # text based replacement, as used for older MapBox styles
+            self.style_json_processed = self.style_json_orig.replace(self.lang_key, self.lang[lang])
+
+        else:
+            # replacement using expressions with fallbacks
+            if lang == Map.KEY_LOCAL:
+                replacement = ["get", self.lang[Map.KEY_LOCAL]]
+            elif lang == Map.KEY_INT:
+                replacement = ["coalesce",
+                               ["get", self.lang[Map.KEY_INT]],
+                               ["get", self.lang[Map.KEY_LOCAL]]]
+            else:
+                replacement = ["coalesce",
+                               ["get", self.lang[lang]],
+                               ["get", self.lang[Map.KEY_INT]],
+                               ["get", self.lang[Map.KEY_LOCAL]]]
+            sj = self._process_style_json(json.loads(self.style_json_orig), replacement)
+            self.style_json_processed = json.dumps(sj)
+        #     for l in sj['layers']:
+        #         print(l['id'])
+        #     print()
+
+        # with open('style.json', "w") as f: f.write(self.style_json_processed)
         return self.style_json_processed
 
     def style_json(self, lang=None):
@@ -124,16 +176,18 @@ class Map:
         def process(s):
             if isinstance(self.lang, dict) and self.lang_key is not None:
                 if lang in self.lang: r = self.lang[lang]
-                elif "local" in self.lang: r = self.lang["local"]
-                elif "en" in self.lang: r = self.lang["en"]
+                elif Map.KEY_LOCAL in self.lang: r = self.lang[Map.KEY_LOCAL]
+                elif Map.KEY_INT in self.lang: r = self.lang[Map.KEY_INT]
                 else: r = self.lang.values()[0]
                 s = s.replace(self.lang_key, r)
             return s
         if self.style_dict:
             return process(json.dumps(self.style_dict, ensure_ascii=False))
-        glyphs = "mapbox://fonts/mapbox/{fontstack}/{range}.pbf"
+        glyphs = "http://fonts.openmaptiles.org/{fontstack}/{range}.pbf"
         if poor.conf.font_provider == "osmscout":
             glyphs = "http://127.0.0.1:8553/v1/mbgl/glyphs?stack={fontstack}&range={range}"
+        elif poor.conf.font_provider == "mapbox":
+            glyphs = "mapbox://fonts/mapbox/{fontstack}/{range}.pbf"
         elif poor.conf.font_provider == "maptiler":
             glyphs = "https://api.maptiler.com/fonts/{fontstack}/{range}.pbf?key=" + poor.key.maptiler_key
         return json.dumps({
