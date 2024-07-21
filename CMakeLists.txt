@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5.1) # Latest version as supported by Ubuntu Touch
 
 project(pure-maps
-    VERSION 3.2.0
+    VERSION 3.3.0
     DESCRIPTION "Maps and navigation")
 
 # options
@@ -16,6 +16,7 @@ set(S2INCLUDES "" CACHE STRING "Custom installed location for s2geometry, includ
 set(S2LIBS "" CACHE STRING "Custom installed location for s2geometry, libs")
 option(USE_BUNDLED_GPXPY "Use a bundled version of GPXPY rather than a system-wide version" ON)
 option(USE_BUNDLED_GEOMAG "Use a bundled version of geomag rather than a system-wide version" ON)
+option(USE_BUNDLED_FLEXPOLYLINE "Use a bundled version of flexible-polyline rather than a system-wide version" ON)
 option(USE_BUNDLED_GEOCLUE2 "Use a bundled version of Geoclue2 Qt plugin with bugfixes" OFF)
 set(QML_IMPORT_PATH "" CACHE STRING "Additional QML import path")
 
@@ -211,6 +212,8 @@ else()
       set(DESKTOP_SRC
           data/${APP_REV_NAME}.desktop
           data/${APP_NAME}-uri-handler.desktop)
+      install(FILES data/harbour-pure-maps-launcher
+              DESTINATION ${DATADIR}/scripts)
     endif()
 endif()
 
