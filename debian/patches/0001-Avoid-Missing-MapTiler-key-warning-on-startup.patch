@@ -8,10 +8,10 @@ Replace MapTiler with OpenTopoMap as default map.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index d8a5775..f41b37b 100644
+index 8b021c9..15dd9d2 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -20,7 +20,7 @@ option(USE_BUNDLED_GEOCLUE2 "Use a bundled version of Geoclue2 Qt plugin with bu
+@@ -21,7 +21,7 @@ option(USE_BUNDLED_GEOCLUE2 "Use a bundled version of Geoclue2 Qt plugin with bu
  set(QML_IMPORT_PATH "" CACHE STRING "Additional QML import path")
  
  set(DEFAULT_PROFILE "online" CACHE STRING "Default profile. Supported profile selection: online, offline")
