@@ -1,5 +1,5 @@
 Source: pure-maps
-Section: graphics
+Section: misc
 Priority: optional
 Maintainer: Sebastian Spaeth <Sebastian@SSpaeth.de>
 Build-Depends: debhelper-compat (= 13),
