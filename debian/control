@@ -5,7 +5,7 @@ Maintainer: Sebastian Spaeth <Sebastian@SSpaeth.de>
 Build-Depends: debhelper-compat (= 13),
  cmake,
  python3,
- libs2-dev,
+ libs2-dev (>= 0.11.1),
  qtbase5-dev | qtbase5-gles-dev,
  qt5-qmake,
  qttools5-dev-tools,
